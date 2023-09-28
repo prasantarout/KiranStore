@@ -44,7 +44,7 @@ const BottomNav = () => {
         tabBarStyle: {
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: 'rgba(22, 22, 22, 1) rgba(0, 0, 0, 1)',
+          backgroundColor:Colors.backgroundMedium,
           borderTopRightRadius: 30,
           borderTopLeftRadius: 30,
           height: Platform.OS === 'ios' ? normalize(80) : normalize(70),

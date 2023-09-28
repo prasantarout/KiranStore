@@ -6,6 +6,10 @@ export const Icons = {
     home: require("../assets/images/home.png"),
     left:require('../assets/images/arrow-left.png'),
     right:require('../assets/images/right-arrows.png'),
+    picture1:require('../assets/images/Invoice-bro.png'),
+    picture2:require('../assets/images/Spreadsheets-rafiki.png'),
+    picture3:require('../assets/images/Onboarding-rafiki.png'),
+    picture4:require('../assets/images/Collecting-rafiki.png'),
    };
 
 
