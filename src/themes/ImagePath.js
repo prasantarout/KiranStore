@@ -10,6 +10,11 @@ export const Icons = {
     picture2:require('../assets/images/Spreadsheets-rafiki.png'),
     picture3:require('../assets/images/Onboarding-rafiki.png'),
     picture4:require('../assets/images/Collecting-rafiki.png'),
+    refresh:require('../assets/images/refresh.png'),
+    rupee:require('../assets/images/rupee.png'),
+    bell:require('../assets/images/bell.png'),
+    accounting:require('../assets/images/accounting.png'),
+
    };
 
 
