@@ -14,19 +14,57 @@ import {Fonts, Icons} from '../../themes/ImagePath';
 import normalize from '../../utils/helpers/dimen';
 // import {HelperText, TextInput} from 'react-native-paper';
 import MyStatusBar from '../../utils/helpers/MyStatusBar';
-
+import showErrorAlert from '../../utils/helpers/Toast';
+import { useDispatch,useSelector } from 'react-redux';
+import { signupRequest } from '../../redux/reducer/AuthReducer';
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Lodaer from '../../utils/helpers/Loader'
 const Login = (props) => {
-  const [emailId, setEmailId] = useState('');
-  const checkErrors = () => {
-    return !emailId.includes('@');
-  };
+  const [number, setNumber] = useState('');
+  const dispatch=useDispatch();
+ const AuthReducer=useSelector((state)=>state.AuthReducer);
+ console.log(AuthReducer.signupResponse,"fnjfj")
+  //  const navigation=useNavigation();
 
-  const checkString = () => {
-    return platform === 'Geeks';
-  };
+  const LoginResponse = () => {
+    if(number===''){
+      showErrorAlert('Please Enter a valid number')
+    }else if(number.length!==10){
+      showErrorAlert('Number must be 10 digits')
+    }else{  
+    // let url="https://bhanumart.com/dev/new_api/login-with-otp";
+    let obj  = new FormData();
+    obj.append("mobile", number);
+     dispatch(signupRequest(obj))
+   }
+  }
+ 
+  let status="";
+  if (status == "" || AuthReducer.status != status) {
+    switch (AuthReducer.status) {
+      case "Auth/signupRequest":
+        status = AuthReducer.status;
+        
+        break;
+      case "Auth/signupSuccess":
+        status = AuthReducer.status;
+        props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token})
+        // dispatch(productGetFromWishListRequest({ user_id }));
+        break;
+      case "Auth/signupFailure":
+        status = AuthReducer.status;
+        
+        break;
+    }
+  }
+
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <MyStatusBar backgroundColor={Colors.darkblue} barStyle="light-content" />
+      <Lodaer visible={AuthReducer.status==="Auth/signupRequest"}/>
       <View
         style={{
           height: '50%',
@@ -80,8 +118,8 @@ const Login = (props) => {
           <TextInput
            placeholder="Phone Number"
            placeholderTextColor="#fff" 
-            value={emailId}
-            onChangeText={text => setEmailId(text)}
+            value={number}
+            onChangeText={text => setNumber(text)}
             style={{
               // backgroundColor: 'transparent',
               fontSize: 18,
@@ -118,7 +156,8 @@ const Login = (props) => {
           marginLeft: normalize(170),
           marginTop: normalize(40),
         }}
-        onPress={() => props?.navigation.navigate('OtpScreen')}
+        // onPress={() => props?.navigation.navigate('OtpScreen')}
+        onPress={()=>LoginResponse()}
         >
         <View
           style={{

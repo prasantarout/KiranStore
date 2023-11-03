@@ -14,19 +14,57 @@ import {Fonts, Icons} from '../../themes/ImagePath';
 import normalize from '../../utils/helpers/dimen';
 // import {HelperText, TextInput} from 'react-native-paper';
 import MyStatusBar from '../../utils/helpers/MyStatusBar';
+import showErrorAlert from '../../utils/helpers/Toast';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch,useSelector } from 'react-redux';
+import { otpverificationRequest } from '../../redux/reducer/AuthReducer';
+import Lodaer from '../../utils/helpers/Loader'
 
 const OtpScreen = props => {
-  const [emailId, setEmailId] = useState('');
-  const checkErrors = () => {
-    return !emailId.includes('@');
+  const {item} = props?.route.params;
+  const AuthReducer=useSelector((state)=>state.AuthReducer);
+  console.log(item.token, 'fdvmlmlxz');
+  const dispatch=useDispatch();
+
+  const [otp, setOtp] = useState('');
+
+  const VerifyOtp = () => {
+    if (otp === '') {
+      showErrorAlert('Please Enter a valid otp');
+    } else if (otp.length !== 4) {
+      showErrorAlert('Please Enter a valid otp');
+    } else {
+      let obj = new FormData();
+      obj.append('token', item);
+      obj.append('otp', otp);
+      dispatch(otpverificationRequest(obj))
+    }
   };
 
-  const checkString = () => {
-    return platform === 'Geeks';
-  };
+   
+  let status="";
+  if (status == "" || AuthReducer.status != status) {
+    switch (AuthReducer.status) {
+      case "Auth/otpverificationRequest":
+        status = AuthReducer.status;
+        
+        break;
+      case "Auth/otpverificationSuccess":
+        status = AuthReducer.status;
+        props.navigation.navigate('NavigationScreen')
+        // dispatch(productGetFromWishListRequest({ user_id }));
+        break;
+      case "Auth/otpverificationFailure":
+        status = AuthReducer.status;
+        
+        break;
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <MyStatusBar backgroundColor={Colors.darkblue} barStyle="light-content" />
+      <Lodaer visible={AuthReducer.status==="Auth/otpverificationRequest"}/>
       <View
         style={{
           height: '50%',
@@ -80,8 +118,8 @@ const OtpScreen = props => {
           <TextInput
             placeholder="Enter otp receive on mobile"
             placeholderTextColor="#fff"
-            value={emailId}
-            onChangeText={text => setEmailId(text)}
+            value={otp}
+            onChangeText={text => setOtp(text)}
             style={{
               // backgroundColor: 'transparent',
               fontSize: 18,
@@ -117,7 +155,7 @@ const OtpScreen = props => {
           marginLeft: normalize(170),
           marginTop: normalize(30),
         }}
-        onPress={() => props?.navigation.navigate('NavigationScreen')}>
+        onPress={() => VerifyOtp()}>
         <View
           style={{
             flexDirection: 'row',
@@ -160,7 +198,8 @@ const OtpScreen = props => {
             borderBottomColor: 'white',
             paddingVertical: 8, // Adjust padding as needed
             marginRight: 10, // Add margin to separate the buttons
-          }}>
+          }}
+          onPress={() => props.navigation.navigate('Login')}>
           <Text style={{color: 'white'}}>Change Number</Text>
         </TouchableOpacity>
         <View

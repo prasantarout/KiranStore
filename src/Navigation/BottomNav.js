@@ -45,8 +45,8 @@ const BottomNav = () => {
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: Colors.placeholder,
-          // borderTopRightRadius: 30,
-          // borderTopLeftRadius: 30,
+          borderTopRightRadius: 30,
+          borderTopLeftRadius: 30,
           height: Platform.OS === 'ios' ? normalize(70) : normalize(70),
           position: 'absolute',
           bottom: 0,
@@ -80,7 +80,7 @@ const BottomNav = () => {
                   backgroundColor: focused ? Colors.darkblue : '',
                   padding: normalize(10),
                   borderRadius: 10,
-                  flex: 1, // Equal width
+                  flex:0.5, // Equal width
                   flexDirection: 'column', // Stack icon and text vertically
                 }}>
                 <Image
@@ -122,7 +122,7 @@ const BottomNav = () => {
                   backgroundColor: focused ? Colors.darkblue : '',
                   padding: normalize(10),
                   borderRadius: 10,
-                  flex: 1, // Equal width
+                  flex:0.5, // Equal width
                   flexDirection: 'column', // Stack icon and text vertically
                 }}>
                 <Image
@@ -167,7 +167,7 @@ const BottomNav = () => {
                   backgroundColor: focused ? Colors.darkblue : '',
                   padding: normalize(5),
                   borderRadius: 10,
-                  flex: 1, // Equal width
+                  flex:0.5, // Equal width
                   flexDirection: 'column', // Stack icon and text vertically
                 }}>
                 <Image
@@ -208,7 +208,7 @@ const BottomNav = () => {
                   backgroundColor: focused ? Colors.darkblue : '',
                   padding: normalize(10),
                   borderRadius: 10,
-                  flex: 1, // Equal width
+                  flex:0.5, // Equal width
                   flexDirection: 'column', // Stack icon and text vertically
                 }}>
                 <Image
@@ -222,7 +222,7 @@ const BottomNav = () => {
                 />
                 <Text
                   style={{
-                  
+                    top:normalize(-2),
                     color: focused ? Colors.white : Colors.black,
                   }}>
                   More

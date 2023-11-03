@@ -6,13 +6,14 @@ import {
   FlatList,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from 'react-native';
 import React from 'react';
 import MyStatusBar from '../../utils/helpers/MyStatusBar';
 import {Colors} from '../../themes/Colors';
 import normalize from '../../utils/helpers/dimen';
 import {Icons} from '../../themes/ImagePath';
-const Home = () => {
+const Home = (props) => {
   let item = [
     {
       id: 1,
@@ -33,6 +34,76 @@ const Home = () => {
     },
   ];
 
+  const itemTest = [
+    {
+      id: 1,
+      icon: Icons.stock,
+      title: 'My\nstock',
+    },
+    {
+      id: 2,
+      icon: Icons.supplier,
+      title: 'My\nsuppliers',
+    },
+    {
+      id: 3,
+      icon: Icons.customers,
+      title: 'My\ncustomers',
+    },
+    {
+      id: 4,
+      icon: Icons.order,
+      title: 'My\norders',
+    },
+  ];
+  
+
+  const renderItem = ({item}) => (
+    <TouchableOpacity
+      style={{
+        backgroundColor: Colors.white,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: normalize(5),
+        marginTop: normalize(20),
+        borderRadius: 10,
+        // padding: normalize(10),
+        width:normalize(55),
+        height: normalize(85),
+      }}
+     onPress={()=>{
+      if(item.id===1){
+        props.navigation.navigate('TabStack1')
+      }else if(item.id===2){
+        props.navigation.navigate('MySuppliers')
+      }else if(item.id===3){
+        props.navigation.navigate('MyCustomers')
+      }else if(item.id===4){
+        props.navigation.navigate('MyOrders')
+      }
+     }}
+      
+      >
+      <Image
+        source={item.icon}
+        style={{height: normalize(30), width: normalize(30)}}
+      />
+      <Text
+        style={{
+          color: Colors.black2,
+          fontSize: normalize(12),
+          
+          textAlign: 'center',
+          marginTop: normalize(5),
+          
+        }}
+        
+        >
+        {item.title}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={{flex: 1}}>
       <MyStatusBar backgroundColor={'white'} barStyle={'dark-content'} />
@@ -42,6 +113,7 @@ const Home = () => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             marginHorizontal: normalize(20),
+            marginTop: Platform.OS === 'android' ? normalize(50) : 0,
           }}>
           <View></View>
           <View>
@@ -59,7 +131,17 @@ const Home = () => {
                     borderRadius: 30,
                     borderWidth: item?.id === 1 ? 1 : null,
                     borderColor: item?.id === 1 ? Colors.placeholder : null,
-                  }}>
+                  }}
+                  onPress={()=>{
+                    if(item.id===3){
+                      props.navigation.navigate('Notification');
+                    }else if(item.id===4){
+                      props.navigation.navigate('SelfLedger');
+                    }else if(item.id===1){
+                      props.navigation.navigate('Refer');
+                    }
+                  }}
+                  >
                   <Image source={item.icon} style={styles.icon} />
                   <Text
                     style={{
@@ -114,17 +196,17 @@ const Home = () => {
           </View>
           <View
             style={{
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.darkblue,
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
               marginHorizontal: normalize(20),
               marginTop: normalize(20),
-              borderRadius: 10,
-              padding: normalize(24),
+              borderRadius: 20,
+              padding: normalize(18),
               paddingHorizontal: normalize(10),
             }}>
-            <View style={{flexDirection: 'column',marginVertical:10}}>
+            <View style={{flexDirection: 'column', paddingHorizontal: 10}}>
               <Text
                 style={{
                   color: Colors.white,
@@ -138,40 +220,164 @@ const Home = () => {
                   color: Colors.white,
                   fontSize: normalize(15),
                   fontWeight: 'bold',
+                  marginTop: normalize(10),
                 }}>
-                New Bill
+                Create Bill
               </Text>
-              <TouchableOpacity style={{
-                borderRadius:normalize(5),
-                borderWidth:1,
-                width:normalize(25),
-                borderColor:Colors.white,
-                justifyContent:'center',
-                alignItems:'center'
-
-              }}>
+              <TouchableOpacity
+                style={{
+                  borderRadius: normalize(5),
+                  borderWidth: 1,
+                  width: normalize(25),
+                  borderColor: Colors.white,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginTop: normalize(10),
+                }} 
+                onPress={()=>props.navigation.navigate('NewBill')}
+                >
                 <Image
                   source={Icons.right}
                   style={{height: normalize(15), width: normalize(15)}}
+                  tintColor={Colors.white}
                 />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity
+            <View
               style={{
-                borderRadius: normalize(6),
+                borderRadius: normalize(50),
                 backgroundColor: Colors.white,
-                padding: normalize(10),
+                height: normalize(100),
+                width: normalize(100),
+                // backgroundColor: 'red',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: normalize(6),
+              }}>
+              <Image
+                source={Icons.trolley}
+                style={{height: normalize(80), width: normalize(80)}}
+                // tintColor={Colors.white}
+              />
+            </View>
+          </View>
+          <View style={{flexDirection:'row'}}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: Colors.background,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginHorizontal: normalize(20),
+              marginTop: normalize(20),
+              borderRadius: 10,
+              padding: normalize(14),
+              // paddingHorizontal: normalize(10),
+              width:'40%',
+              borderWidth: 1,
+            }}
+            onPress={()=>props.navigation.navigate('AddPRoductToMyShop')}
+            >
+            <Text
+              style={{
+                color: Colors.black2,
+                fontSize: normalize(14),
+                fontWeight: 'bold',
+              }}>
+              Add Products
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              backgroundColor: Colors.background,
+              justifyContent: 'center',
+              alignItems: 'center',
+              // marginHorizontal: normalize(20),
+              marginTop: normalize(20),
+              borderRadius: 10,
+              padding: normalize(14),
+              width:'40%',
+              // paddingHorizontal: normalize(10),
+              borderWidth: 1,
+            }}
+            onPress={()=>props.navigation.navigate('Purchase')}
+            >
+            <Text
+              style={{
+                color: Colors.black2,
+                fontSize: normalize(14),
+                fontWeight: 'bold',
+              }}>
+              Purchase
+            </Text>
+          </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            style={{
+              backgroundColor: Colors.background,
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexDirection: 'row',
+              marginHorizontal: normalize(20),
+              marginTop: normalize(20),
+              borderRadius: 10,
+              padding: normalize(14),
+              paddingHorizontal: normalize(10),
+              borderWidth: 1,
+            }}
+            onPress={()=>props.navigation.navigate('OnlineShop')}
+            >
+            <View
+              style={{
+                flexDirection: 'column',
+                marginHorizontal: normalize(10),
               }}>
               <Text
                 style={{
-                  color: Colors.black,
-                  fontSize: normalize(12),
-                  fontWeight: 'bold',
+                  color: Colors.black2,
+                  fontSize: normalize(15),
+                  // fontWeight: '100',
                 }}>
-                Upgrade Now
+                Set-up your
               </Text>
-            </TouchableOpacity>
-          </View>
+              <Text
+                style={{
+                  color: Colors.textlightgrey,
+                  fontSize: normalize(24),
+                  fontWeight: '500',
+                  marginTop: normalize(8),
+                }}>
+                Online Store
+              </Text>
+            </View>
+            <Image
+              source={Icons.food}
+              style={{
+                height: normalize(60),
+                width: normalize(60),
+                marginRight: normalize(10),
+              }}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              backgroundColor: Colors.background,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginHorizontal: normalize(20),
+              marginTop: normalize(20),
+              borderRadius: 10,
+              // padding: normalize(5),
+              paddingHorizontal: normalize(10),
+            }}>
+            <FlatList
+              data={itemTest}
+              renderItem={renderItem}
+              keyExtractor={item => item.id.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{marginBottom: normalize(20)}}
+            />
+          </TouchableOpacity>
         </ScrollView>
       </View>
     </View>

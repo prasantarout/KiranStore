@@ -46,6 +46,7 @@ export const Colors = {
     backgroundMedium: '#B9B9B9',
     backgroundDark: '#777777',
     lightLime: "#BBD6C5",
+    transparentBlue:'rgba("#051937", "#00405c", "#156976","#4f9389", "#90bc9a")',
 
   };
   

@@ -8,11 +8,21 @@ export async function getApi(url, header) {
     headers: {
       Accept: header.Accept,
       "Content-type": header.contenttype,
-      "x-access-token": header.accesstoken,
+      // "x-access-token": header.accesstoken,
       // Authorization: 'Bearer' + ' ' + header.accesstoken,
     },
   });
+
 }
+
+  // if (!response.ok) {
+  //   throw new Error(`API Request Error: ${response.status} - ${response.statusText}`);
+  // }
+
+  // const data = await response.json();
+  // console.log("Response Data:", data);
+  // return data;
+
 
 export async function getApiWithParam(url, param, header) {
   console.log("getApiWithParam: ", `${constants.BASE_URL}/${url}`);
@@ -30,14 +40,29 @@ export async function getApiWithParam(url, param, header) {
 }
 
 export async function postApi(url, payload, header) {
-  console.log("PostApi: ", `${constants.BASE_URL}/${url}`);
+  // debugger;
+  try {
+    console.log("PostApi: ", `${constants.BASE_URL}/${url}`);
+    const response = await fetch(`${constants.BASE_URL}/${url}`, {
+      method: "POST",
+      headers: {
+        Accept: header.Accept,
+        // "Content-Type": header.contenttype,
+      },
+      body: payload, // Assuming 'payload' is a FormData object
+    });
 
-  return await axios.post(`${constants.BASE_URL}/${url}`, payload, {
-    headers: {
-      Accept: header.Accept,
-      "Content-Type": header.contenttype,
-      "x-access-token": header.accesstoken,
-      // Authorization: 'Bearer' + ' ' + header.accesstoken,
-    },
-  });
+    if (!response.ok) {
+      throw new Error(`API Request Error: ${response.status} - ${response.statusText}`);
+    }
+
+    const responseData = await response.json(); // Parse the response JSON
+    console.log("Response Data:", responseData);
+
+    return responseData;
+  } catch (error) {
+    console.error("API Request Error:", error);
+    throw error; // Rethrow the error for Saga to handle
+  }
 }
+
