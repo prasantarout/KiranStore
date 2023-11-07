@@ -48,6 +48,9 @@ export const Icons = {
     diamond:require('../assets/images/diamond.png'),
     baner:require('../assets/images/banner6.jpg'),
     dots:require('../assets/images/dots.png'),
+    item1:require('../assets/images/item1.jpeg'),
+    item2:require('../assets/images/item2.jpeg'),
+    item3:require('../assets/images/item3.jpeg'),
    };
 
 

@@ -154,6 +154,8 @@ dependencies {
     implementation("com.facebook.react:react-android")
      implementation "com.facebook.react:react-native:+"
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.0.0")
+     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.9.0"))
+
     //  implementation project(':react-native-barcodescanner')
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {

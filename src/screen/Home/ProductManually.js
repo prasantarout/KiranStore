@@ -37,13 +37,16 @@ const ProductManually = props => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isModalVisible2, setModalVisible2] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(null);
-  const [selectedQuantity1, setSelectedQuantity1] = useState(null);
+
   const [isAccordionOpen, setAccordionOpen] = useState(true);
   const [isDefaultPrice, setIsDefaultPrice] = useState(false);
   const [isDefaultPrice1, setIsDefaultPrice1] = useState(false);
-  const [selectedQuantityId,setSelectedQuantityId]=useState(null)
+  const [selectedQuantityId, setSelectedQuantityId] = useState(null);
 
   const dispatch = useDispatch();
+
+  const item=props?.route.params ?props?.route?.params:'';
+  console.log(item,"sadhskd??????????????")
 
   const quantities = ['1', '2', '3', '4', '5'];
   const quantities1 = ['Yes', 'No'];
@@ -56,24 +59,19 @@ const ProductManually = props => {
   };
 
   const handleQuantitySelect = quantity => {
-    setSelectedQuantityId(quantity.id)
-    console.log(quantity,"xzfmlfml")
+    setSelectedQuantityId(quantity.id);
+    console.log(quantity, 'xzfmlfml');
     setSelectedQuantity(quantity.name);
     toggleModal();
   };
-  const handleQuantitySelect1 = quantity => {
-    setSelectedQuantity1(quantity);
-    toggleModal2();
+  const handleQuantitySelect1 = (value, variantIndex) => {
+    const updatedVariants = [...variants];
+    updatedVariants[variantIndex].inclusiveGst = value;
+    setVariants(updatedVariants);
+    setModalVisible2(false); // Close the modal after selection
   };
 
-  // const handleQuantitySelect1 = (quantity, index) => {
-  //   const updatedInclusiveGstValues = { ...inclusiveGstValues };
-  //   setSelectedQuantity1(quantity);
-  //   updatedInclusiveGstValues[index] = quantity;
-  //   // setInclusiveGstValues(updatedInclusiveGstValues);
-  //   // toggleModal2();
-  // };
-  
+
   const toggleAccordion = () => {
     setAccordionOpen(!isAccordionOpen);
   };
@@ -191,23 +189,13 @@ const ProductManually = props => {
   console.log(ProductReducer?.TaxSlotaddRes?.product_id, 'ffnxnc');
 
   const [product, setProduct] = useState('');
-  const [variantName, setVariantName] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [barcodenumber, setBarCodeNumber] = useState('');
-  const [mrp, setMrp] = useState('');
-  const [purchase, setPurchase] = useState('');
-  const [batch, setBatch] = useState('');
-  const [expiryDate, setExpirydate] = useState('');
-  const [expiryDateAlert, setExpirydateAlert] = useState('');
-  const [mobileSalePrice, setMobileSalePrice] = useState('');
-  const [storeSalePrice, setStoreSalePrice] = useState('');
-  const [WholesalePrice, setwholePrice] = useState('');
+
   const [generatedBarcodes, setGeneratedBarcodes] = useState([]);
+  const [selectedBarcode, setSelectedBarcode] = useState('');
   const [CalenderVisible, setCalenderVisible] = useState(false);
   const [CalenderVisible1, setCalenderVisible1] = useState(false);
   const [numVariants, setNumVariants] = useState(1);
-  const [inclusiveGstValues, setInclusiveGstValues] = useState({});
-
+  
 
   const hideDatePicker = () => {
     setCalenderVisible(false);
@@ -221,7 +209,7 @@ const ProductManually = props => {
     handleChange(formattedDate, index, 'expiryDate');
     setCalenderVisible(false); // Close the date picker modal
   };
-  
+
   const handleConfirm1 = (date, index) => {
     const formattedDate = moment(date).format('MM/DD/YYYY');
     handleChange(formattedDate, index, 'expiryDateAlert');
@@ -255,112 +243,145 @@ const ProductManually = props => {
       // console.log(obj, 'Dsdskjfd');
     }
   }
-  console.log(selectedQuantity,"sdjlLJ")
-  const [variants, setVariants] = useState([{}]);
-const [variantData, setVariantData] = useState([{}]);
-// const [generatedBarcodes, setGeneratedBarcodes] = useState([[]]);
+  // console.log(selectedQuantity, 'sdjlLJ');
+  // const [variants, setVariants] = useState([{}]);
+  // const [variantData, setVariantData] = useState([{}]);
+  // const [generatedBarcodes, setGeneratedBarcodes] = useState([[]]);
 
-const handleAddVariant = () => {
-  const newVariant = {};
-  setVariants([...variants, newVariant]);
-  setVariantData([...variantData, newVariant]);
-  setGeneratedBarcodes([...generatedBarcodes, []]); // Initialize an empty array for the new variant
-};
+  // const handleAddVariant = () => {
+  //   const newVariant = {barcode: ''}; // Initialize with an empty barcode
+  //   setVariants([...variants, newVariant]);
+  //   setVariantData([...variantData, newVariant]);
+  //   setGeneratedBarcodes([...generatedBarcodes, '']); // Initialize with an empty barcode
+  //   setUserInputBarcode(''); // Clear the selected barcode
+  //   // generateRandomBarcode(variants.length); // Generate a new barcode for the new variant
+  // };
 
-const handleRemoveVariant = index => {
-  const updatedVariants = [...variants];
-  updatedVariants.splice(index, 1);
-  setVariants(updatedVariants);
+  // const handleRemoveVariant = index => {
+  //   const updatedVariants = [...variants];
+  //   updatedVariants.splice(index, 1);
+  //   setVariants(updatedVariants);
 
-  const updatedVariantData = [...variantData];
-  updatedVariantData.splice(index, 1);
-  setVariantData(updatedVariantData);
+  //   const updatedVariantData = [...variantData];
+  //   updatedVariantData.splice(index, 1);
+  //   setVariantData(updatedVariantData);
 
-  const updatedGeneratedBarcodes = [...generatedBarcodes];
-  updatedGeneratedBarcodes.splice(index, 1);
-  setGeneratedBarcodes(updatedGeneratedBarcodes);
-};
-  const handleChange = (text, index, field) => {
-    const updatedVariantData = [...variantData];
-    updatedVariantData[index][field] = text;
-    setVariantData(updatedVariantData);
-  
-    if (field === 'barcode') {
-      // Update the barcode for the specific variant
-      const updatedGeneratedBarcodes = [...generatedBarcodes];
-      updatedGeneratedBarcodes[index] = [text];
-      setGeneratedBarcodes(updatedGeneratedBarcodes);
-    }
-  };
-  
+  //   const updatedGeneratedBarcodes = [...generatedBarcodes];
+  //   updatedGeneratedBarcodes.splice(index, 1);
+  //   setGeneratedBarcodes(updatedGeneratedBarcodes);
+  // };
 
-  const AddProductDetails = async () => {
-    // debugger;
-    var dataValue;
-    await AsyncStorage.getItem('user_id').then(value => {
-      if (value != null) {
-        dataValue = value;
-      }
-    });
+  // const handleChange = (text, index, field) => {
+  //   const updatedVariantData = [...variantData];
+  //   updatedVariantData[index][field] = text;
+  //   setVariantData(updatedVariantData);
 
-    for (const variantIndex in variantData) {
-      const variant = variantData;
-      console.log('Variant Data:', variant);
-      if (
-        !variant.variantName ||
-        !variant.quantity ||
-        // !variant.barcodenumber ||
-        !variant.mrp ||
-        !variant.batch_no||
-        !variant.purchase ||
-        !variant.expiryDate ||
-        !variant.expiryDateAlert ||
-        !variant.selectedQuantity1 ||
-        !variant.mobile_price ||
-        !variant.store_price ||
-        !variant.wholesale_price
-      ) {
-        showErrorAlert('All fileds are required');
-        return;
-      }
-      let obj = new FormData();
-      obj.append('user_id', dataValue);
-      obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
-      obj.append('size', variant.variantName);
-      obj.append('quantity', variant.quantity);
-      // obj.append('user_id', dataValue);
-      // obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
-      // obj.append('size', variantName);
-      // obj.append('quantity', quantity);
-      obj.append('barcode', variant.barcodenumber);
-      obj.append('mrp', variant.mrp);
-      obj.append('purchase_price', variant.purchase);
-      obj.append('batch_no', variant.batch_no);
-      obj.append('exp_date', variant.expiryDate);
-      obj.append('exp_date_alert', variant.expiryDateAlert);
-      obj.append('inclusive_gst',selectedQuantity1);
-      obj.append('mobile_price', variant.mobile_price);
-      obj.append('store_price', variant.store_price);
-      obj.append('wholesale_price', variant.wholesale_price);
+  //   if (field === 'barcode') {
+  //     setSelectedBarcode(text);
+  //     setUserInputBarcode(text); // Update userInputBarcode with manually entered text
+  //   }
+  // };
 
+  // const maxBarcodeCount = 5; // Set the maximum allowed barcode count
 
-      console.log(obj,"jxvxzvx")
-      // Add other fields and values for the FormData
-    return
+  // const generateBarcode = () => {
+  //   if (generatedBarcodes.length < maxBarcodeCount) {
+  //     const randomBarcode = Math.floor(Math.random() * 1000000).toString();
+  //     return randomBarcode;
+  //   } else {
+  //     showErrorAlert('Maximum you have generated 5 barcode numbers at a time');
+  //     return null;
+  //   }
+  // };
 
-    
-      // Make the API call for this variant's data.`````
-      connectionrequest()
-        .then(() => {
-          dispatch(ProductDetailsRequest(obj));
-        })
-        .catch(err => {
-          showErrorAlert('Please connect To Internet');
-        });
-    }
+  // const generateRandomBarcode = index => {
+  //   let newBarcode;
+  //   if (userInputBarcode) {
+  //     newBarcode = userInputBarcode;
+  //   } else {
+  //     newBarcode = generateBarcode();
+  //   }
 
-    // Continue with the rest of your logic (e.g., navigation or other actions)
-  };
+  //   // Clear the userInputBarcode and set the barcode for the new variant to an empty string
+  //   setUserInputBarcode('');
+
+  //   const updatedVariantData = [...variantData];
+  //   updatedVariantData[index].barcodenumber = newBarcode;
+
+  //   // Update the variant data and generated barcodes
+  //   setVariantData(updatedVariantData);
+  //   setGeneratedBarcodes(prevState => {
+  //     const newBarcodes = [...prevState];
+  //     newBarcodes[index] = newBarcode;
+  //     return newBarcodes;
+  //   });
+  // };
+
+  // const AddProductDetails = async () => {
+  //   // debugger;
+  //   var dataValue;
+  //   await AsyncStorage.getItem('user_id').then(value => {
+  //     if (value != null) {
+  //       dataValue = value;
+  //     }
+  //   });
+
+  //   for (const variantIndex in variantData) {
+  //     const variant = variantData;
+  //     console.log('Variant Data:', variant);
+  //     if (
+  //       !variant.variantName ||
+  //       !variant.quantity ||
+  //       // !variant.barcodenumber ||
+  //       !variant.mrp ||
+  //       !variant.batch_no ||
+  //       !variant.purchase ||
+  //       !variant.expiryDate ||
+  //       !variant.expiryDateAlert ||
+  //       !variant.selectedQuantity1 ||
+  //       !variant.mobile_price ||
+  //       !variant.store_price ||
+  //       !variant.wholesale_price
+  //     ) {
+  //       showErrorAlert('All fileds are required');
+  //       return;
+  //     }
+  //     let obj = new FormData();
+  //     obj.append('user_id', dataValue);
+  //     obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
+  //     obj.append('size', variant.variantName);
+  //     obj.append('quantity', variant.quantity);
+  //     // obj.append('user_id', dataValue);
+  //     // obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
+  //     // obj.append('size', variantName);
+  //     // obj.append('quantity', quantity);
+  //     obj.append('barcode', variant.barcodenumber);
+  //     obj.append('mrp', variant.mrp);
+  //     obj.append('purchase_price', variant.purchase);
+  //     obj.append('batch_no', variant.batch_no);
+  //     obj.append('exp_date', variant.expiryDate);
+  //     obj.append('exp_date_alert', variant.expiryDateAlert);
+  //     obj.append('inclusive_gst', selectedQuantity1);
+  //     obj.append('mobile_price', variant.mobile_price);
+  //     obj.append('store_price', variant.store_price);
+  //     obj.append('wholesale_price', variant.wholesale_price);
+
+  //     console.log(obj, 'jxvxzvx');
+  //     // Add other fields and values for the FormData
+  //     return;
+
+  //     // Make the API call for this variant's data.`````
+  //     connectionrequest()
+  //       .then(() => {
+  //         dispatch(ProductDetailsRequest(obj));
+  //       })
+  //       .catch(err => {
+  //         showErrorAlert('Please connect To Internet');
+  //       });
+  //   }
+
+  //   // Continue with the rest of your logic (e.g., navigation or other actions)
+  // };
 
   //  async function AddProductDetails() {
   //     var dataValue;
@@ -428,33 +449,289 @@ const handleRemoveVariant = index => {
   //         });
   //     }
   //   }
-  const maxBarcodeCount = 5; // Set the maximum allowed barcode count
-
-  const generateRandomBarcode = () => {
-    if (generatedBarcodes.length < maxBarcodeCount) {
-      const randomBarcode = Math.floor(Math.random() * 1000000).toString();
-      setGeneratedBarcodes([...generatedBarcodes, randomBarcode]);
-    } else {
-      showErrorAlert('Maximum you have generate 5 barcode number at a time');
-    }
-  };
 
   let status = '';
   if (status == '' || ProductReducer.status != status) {
     switch (ProductReducer.status) {
       case 'Product/ProductDetailsRequest':
-        status = AuthReducer.status;
+        status = ProductReducer.status;
 
         break;
       case 'Product/ProductDetailsSuccess':
         status = ProductReducer.status;
-        props.navigation.navigate('MyStock');
+        // props.navigation.navigate('MyStock');
         // dispatch(productGetFromWishListRequest({ user_id }));
         break;
       case 'Product/ProductDetailsFailure':
         status = ProductReducer.status;
 
         break;
+    }
+  }
+
+  const handleChange = (text, index, field) => {
+    const updatedVariants = [...variants];
+    updatedVariants[index][field] = text;
+    setVariants(updatedVariants);
+  };
+
+  const maxBarcodeCount = 5;
+  const generateBarcode = () => {
+    if (generatedBarcodes.length < maxBarcodeCount) {
+      const randomBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+      return randomBarcode;
+    } else {
+      showErrorAlert('Maximum you have generated 5 barcode numbers at a time');
+      return null;
+    }
+  };
+
+  const handleGenerateRandomBarcode = index => {
+    const newBarcode = generateBarcode();
+
+    const updatedVariants = [...variants];
+    updatedVariants[index].barcodenumber = newBarcode;
+
+    setVariants(updatedVariants);
+  };
+
+  const handleRemoveVariant = index => {
+    const updatedVariants = [...variants];
+    updatedVariants.splice(index, 1);
+    setVariants(updatedVariants);
+  };
+
+  //   const handleAddMultiplePrices = (index) => {
+  //   const updatedVariants = [...variants];
+  //   updatedVariants[index].mrp.push('');      // Add a new empty MRP value
+  //   updatedVariants[index].purchase.push(''); // Add a new empty Purchase Price value
+  //   setVariants(updatedVariants);
+  // };
+
+  const [variants, setVariants] = useState([
+    {
+      variantName: '',
+      quantity: '',
+      barcodenumber:item ? item.item : '', // Initialize with an empty barcode
+      mrp: '',
+      batch_no: '',
+      purchase: '',
+      expiryDate: '',
+      expiryDateAlert: '',
+      // selectedQuantity1: '',
+      mobile_price: '',
+      store_price: '',
+      wholesale_price: '',
+      inclusiveGst: 'Yes',
+    },
+  ]);
+
+  const handleAddVariant = () => {
+    
+    setVariants(prevVariants => [
+      ...prevVariants,
+      {
+        variantName: '',
+        quantity: '',
+        barcodenumber:'', // Initialize with an empty barcode
+        mrp: '',
+        batch_no: '',
+        purchase: '',
+        expiryDate: '',
+        expiryDateAlert: '',
+        selectedQuantity1: '',
+        mobile_price: '',
+        store_price: '',
+        wholesale_price: '',
+        inclusiveGst: 'Yes',
+      },
+    ]);
+    // Check if any of the variant properties are non-empty
+    const hasNonEmptyVariant = variants.some(
+      variant =>
+        variant.variantName ||
+        variant.quantity ||
+        variant.barcodenumber ||
+        variant.mrp ||
+        variant.batch_no ||
+        variant.purchase ||
+        variant.expiryDate ||
+        variant.expiryDateAlert ||
+        variant.selectedQuantity1 ||
+        variant.mobile_price ||
+        variant.store_price ||
+        variant.wholesale_price
+    );
+  
+    if (hasNonEmptyVariant) {
+     
+      AddProductDetails();
+    }
+  };
+  
+
+
+
+  
+
+  const AddProductDetails = async () => {
+    // debugger;
+    var dataValue;
+    await AsyncStorage.getItem('user_id').then(value => {
+      if (value != null) {
+        dataValue = value;
+      }
+    });
+
+    // if (!variants) {
+    //   showErrorAlert('No variants provided');
+    //   return;
+    // }
+
+    // if (Array.isArray(variants)) {
+    //   // Handling multiple variants
+    //   let obj = new FormData();
+
+      // const sizes = [];
+      // const quantities = [];
+      // const barcodes = [];
+      // const mrps = [];
+      // const purchasePrices = [];
+      // const batchNumbers = [];
+      // const expiryDates = [];
+      // const expiryDateAlerts = [];
+      // const inclusiveGsts = [];
+      // const mobilePrices = [];
+      // const storePrices = [];
+      // const wholesalePrices = [];
+
+      for (const variant of variants) {
+        // if (
+        //   !variant.variantName ||
+        //   !variant.quantity ||
+        //   !variant.barcodenumber ||
+        //   !variant.mrp ||
+        //   !variant.purchase ||
+        //   !variant.batch_no ||
+        //   !variant.expiryDate ||
+        //   !variant.expiryDateAlert ||
+        //   !variant.inclusiveGst ||
+        //   !variant.mobile_price ||
+        //   !variant.store_price ||
+        //   !variant.wholesale_price
+        // ) {
+        //   showErrorAlert('All fields are required for each variant');
+        //   return;
+        // }
+
+    //     sizes.push(variant.variantName);
+    //     quantities.push(variant.quantity);
+    //     barcodes.push(variant.barcodenumber);
+    //     mrps.push(variant.mrp);
+    //     purchasePrices.push(variant.purchase);
+    //     batchNumbers.push(variant.batch_no);
+    //     expiryDates.push(variant.expiryDate);
+    //     expiryDateAlerts.push(variant.expiryDateAlert);
+    //     inclusiveGsts.push(variant.inclusiveGst);
+    //     mobilePrices.push(variant.mobile_price);
+    //     storePrices.push(variant.store_price);
+    //     wholesalePrices.push(variant.wholesale_price);
+    //   }
+
+    //   obj.append('user_id', dataValue);
+    //   obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
+    //   obj.append('size', JSON.stringify(sizes));
+    //   obj.append('quantity', JSON.stringify(quantities));
+    //   obj.append('barcode', JSON.stringify(barcodes));
+    //   obj.append('mrp', JSON.stringify(mrps));
+    //   obj.append('purchase_price', JSON.stringify(purchasePrices));
+    //   obj.append('batch_no', JSON.stringify(batchNumbers));
+    //   obj.append('exp_date', JSON.stringify(expiryDates));
+    //   obj.append('exp_date_alert', JSON.stringify(expiryDateAlerts));
+    //   obj.append('inclusive_gst', JSON.stringify(inclusiveGsts));
+    //   obj.append('mobile_price', JSON.stringify(mobilePrices));
+    //   obj.append('store_price', JSON.stringify(storePrices));
+    //   obj.append('wholesale_price', JSON.stringify(wholesalePrices));
+
+    //   try {
+    //     await connectionrequest();
+    //     dispatch(ProductDetailsRequest(obj));
+    //   } catch (err) {
+    //     showErrorAlert('Please connect to the Internet');
+    //   }
+    // } else {
+      // Handling a single variant
+      if (
+        !variant.variantName ||
+        !variant.quantity ||
+        !variant.barcodenumber ||
+        !variant.mrp ||
+        !variant.purchase ||
+        !variant.batch_no ||
+        !variant.expiryDate ||
+        !variant.expiryDateAlert ||
+        !variant.inclusiveGst ||
+        !variant.mobile_price ||
+        !variant.store_price ||
+        !variant.wholesale_price
+      ) {
+        showErrorAlert('All fields are required for the variant');
+        return;
+      }
+      let obj = new FormData();
+      obj.append('user_id', dataValue);
+      obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
+      obj.append('tax_slot',selectedQuantityId)
+      obj.append('size', variant.variantName);
+      obj.append('quantity', variant.quantity);
+      obj.append('barcode', variant.barcodenumber);
+      obj.append('mrp', variant.mrp);
+      obj.append('purchase_price', variant.purchase);
+      obj.append('batch_no', variant.batch_no);
+      obj.append('exp_date', variant.expiryDate);
+      obj.append('exp_date_alert', variant.expiryDateAlert);
+      obj.append('inclusive_gst', variant.inclusiveGst);
+      obj.append('mobile_price', variant.mobile_price);
+      obj.append('store_price', variant.store_price);
+      obj.append('wholesale_price', variant.wholesale_price);
+
+      try {
+        await connectionrequest();
+        dispatch(ProductDetailsRequest(obj));
+      } catch (err) {
+        showErrorAlert('Please connect to the Internet');
+      }
+    }
+  };
+
+  async function validateField(){
+    for (const variant of variants) {
+      if(product===""){
+        showErrorAlert('All fields are required for the variant');
+        return;
+      }else 
+      if (
+        !variant.variantName ||
+        !variant.quantity ||
+        !variant.barcodenumber ||
+        !variant.mrp ||
+        !variant.purchase ||
+        !variant.batch_no ||
+        !variant.expiryDate ||
+        !variant.expiryDateAlert ||
+        !variant.inclusiveGst ||
+        !variant.mobile_price ||
+        !variant.store_price ||
+        !variant.wholesale_price
+      ) {
+        // showErrorAlert('All fields are required for the variant');
+        return;
+      }
+     
+        //  connectionrequest();
+      //  AddProductDetails();
+      props?.navigation?.navigate('TabStack1')
+     
     }
   }
 
@@ -497,7 +774,8 @@ const handleRemoveVariant = index => {
 
               {/* Custom Dropdown Section */}
               <View style={styles.dropdownSection}>
-                <Text style={styles.label}>Quantity</Text>
+                <Text style={styles.label}>Quantity:</Text>
+                <Text>{selectedQuantity && selectedQuantity?.slice(4)}</Text>
                 <TouchableOpacity
                   style={styles.dropdownButton}
                   onPress={toggleModal}>
@@ -534,7 +812,7 @@ const handleRemoveVariant = index => {
             </View>
           </View>
 
-          {variants.map((_, index) => (
+          {variants.map((variant, index) => (
             <>
               <View style={styles.container_section}>
                 <View style={styles.accordionHeader}>
@@ -601,7 +879,7 @@ const handleRemoveVariant = index => {
                           borderWidth={1}
                           borderRadius={10}
                           marginTop={normalize(5)}
-                          value={variantData[index]?.variantName || ''}
+                          value={variant.variantName}
                           onChangeText={text =>
                             handleChange(text, index, 'variantName')
                           }
@@ -629,7 +907,7 @@ const handleRemoveVariant = index => {
                           borderWidth={1}
                           borderRadius={10}
                           marginTop={normalize(5)}
-                          value={variantData[index]?.quantity || ''}
+                          value={variant.quantity}
                           onChangeText={text =>
                             handleChange(text, index, 'quantity')
                           }
@@ -661,7 +939,7 @@ const handleRemoveVariant = index => {
                         <View style={styles.container_section1}>
                           <View style={styles.inputContainers}>
                             {/* Left Icon */}
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={()=>props?.navigation?.navigate('Barcode',{flag:1})}>
                               <Image source={Icons.qr} style={styles.icon} />
                             </TouchableOpacity>
 
@@ -669,9 +947,12 @@ const handleRemoveVariant = index => {
                             <TextInput
                               style={styles.textInputs}
                               placeholder="Enter Barcode Number"
-                              value={variantData[index]?.barcodenumber || ''}
+                              // value={userInputBarcode}
+                              // onChangeText={text => setUserInputBarcode(text)}
+
+                              value={variant.barcodenumber}
                               onChangeText={text =>
-                                handleChange(text, index, 'barcode')
+                                handleChange(text, index, 'barcodenumber')
                               }
                             />
 
@@ -691,30 +972,31 @@ const handleRemoveVariant = index => {
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={{flexDirection: 'row'}} // Ensure the content is laid out horizontally
                           >
-                            {generatedBarcodes.map((barcode, index) => (
-                              <TouchableOpacity
-                                key={index}
-                                style={{
-                                  marginTop: normalize(10),
-                                  padding: 3,
-                                  backgroundColor: Colors.lightGrey,
-                                  borderRadius: 10,
-                                  marginLeft: 10,
-                                  flexDirection: 'row', // Set flexDirection to 'row'
-                                  alignItems: 'center', // Align items in a row
-                                }}
-                                onPress={() => setBarCodeNumber(barcode)}>
-                                {/* Barcode number and icon in a row */}
-                                <Text numberOfLines={1}>{barcode}</Text>
-                                {/* <Image
-                                  source={Icons.dots}
+                            {generatedBarcodes.map((barcode, index) =>
+                              barcode ? (
+                                <TouchableOpacity
+                                  key={index}
                                   style={{
-                                    width: normalize(15),
-                                    height: normalize(15),
+                                    marginTop: normalize(10),
+                                    padding: 3,
+                                    backgroundColor: Colors.lightGrey,
+                                    borderRadius: 10,
+                                    marginLeft: 10,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
                                   }}
-                                /> */}
-                              </TouchableOpacity>
-                            ))}
+                                  onPress={() => {
+                                    setSelectedBarcode(barcode);
+                                    handleChange(
+                                      barcode,
+                                      index,
+                                      'barcodenumber',
+                                    );
+                                  }}>
+                                  <Text numberOfLines={1}>{barcode}</Text>
+                                </TouchableOpacity>
+                              ) : null,
+                            )}
                           </ScrollView>
 
                           <TouchableOpacity
@@ -726,7 +1008,7 @@ const handleRemoveVariant = index => {
                               justifyContent: 'flex-end',
                               alignSelf: 'flex-end',
                             }}
-                            onPress={generateRandomBarcode}>
+                            onPress={() => handleGenerateRandomBarcode(index)}>
                             <Text>Auto generated barcode</Text>
                           </TouchableOpacity>
                         </View>
@@ -743,43 +1025,43 @@ const handleRemoveVariant = index => {
                           flexDirection: numTextInputs === 0 ? 'row' : 'column',
                           justifyContent: 'space-between',
                         }}>
-                        {[...Array(numTextInputs).keys()].map(key => {
-                          return (
-                            <View
+                        {/* {[...Array(numTextInputs).keys()].map(key => {
+                          return ( */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginHorizontal: normalize(5),
+                          }}>
+                          <View style={styles.inputSection}>
+                            <Text
                               style={{
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginHorizontal: normalize(5),
+                                fontSize: normalize(12),
+                                color: Colors.black,
                               }}>
-                              <View style={styles.inputSection}>
-                                <Text
-                                  style={{
-                                    fontSize: normalize(12),
-                                    color: Colors.black,
-                                  }}>
-                                  MRP
-                                </Text>
-                                <TextInputItem
-                                  viewbordercolor="red"
-                                  placeholder={'RS.0'}
-                                  width={normalize(130)}
-                                  height={normalize(50)}
-                                  borderWidth={1}
-                                  borderRadius={10}
-                                  marginTop={normalize(5)}
-                                  keyboardType={'numeric'}
-                                  value={variantData[index]?.mrp || ''}
-                                  onChangeText={text =>
-                                    handleChange(text, index, 'mrp')
-                                  }
-                                  textColor={Colors.placeholder}
-                                  placeholderTextColor={Colors.placeholder}
-                                  isRightIconVisible={false}
-                                  fontSize={13}
-                                  fontFamily="Poppins-Medium"
-                                />
-                                <View
+                              MRP
+                            </Text>
+                            <TextInputItem
+                              viewbordercolor="red"
+                              placeholder={'RS.0'}
+                              width={normalize(130)}
+                              height={normalize(50)}
+                              borderWidth={1}
+                              borderRadius={10}
+                              marginTop={normalize(5)}
+                              keyboardType={'numeric'}
+                              value={variant.mrp}
+                              onChangeText={text =>
+                                handleChange(text, index, 'mrp')
+                              }
+                              textColor={Colors.placeholder}
+                              placeholderTextColor={Colors.placeholder}
+                              isRightIconVisible={false}
+                              fontSize={13}
+                              fontFamily="Poppins-Medium"
+                            />
+                            {/* <View
                                   style={{
                                     flexDirection: 'row',
                                     justifyContent: 'center',
@@ -791,9 +1073,9 @@ const handleRemoveVariant = index => {
                                   <Text style={{marginLeft: 5}}>
                                     Set as default price
                                   </Text>
-                                </View>
-                              </View>
-                              {numTextInputs > 1 && (
+                                </View> */}
+                          </View>
+                          {/* {numTextInputs > 1 && (
                                 <TouchableOpacity
                                   onPress={handleDeleteItem}
                                   style={{
@@ -806,42 +1088,41 @@ const handleRemoveVariant = index => {
                                     style={{width: 20, height: 20}}
                                   />
                                 </TouchableOpacity>
-                              )}
-                              <View
-                                style={[
-                                  styles.inputSection,
-                                  {
-                                    right:
-                                      numTextInputs > 1 ? 0 : normalize(-15),
-                                  },
-                                ]}>
-                                <Text
-                                  style={{
-                                    fontSize: normalize(12),
-                                    color: Colors.black,
-                                  }}>
-                                  Purchase price
-                                </Text>
-                                <TextInputItem
-                                  viewbordercolor="red"
-                                  placeholder={'0'}
-                                  width={normalize(130)}
-                                  height={normalize(50)}
-                                  borderWidth={1}
-                                  borderRadius={10}
-                                  keyboardType={'numeric'}
-                                  marginTop={normalize(5)}
-                                  value={variantData[index]?.purchase || ''}
-                                  onChangeText={text =>
-                                    handleChange(text, index, 'purchase')
-                                  }
-                                  textColor={Colors.placeholder}
-                                  placeholderTextColor={Colors.placeholder}
-                                  isRightIconVisible={false}
-                                  fontSize={13}
-                                  fontFamily="Poppins-Medium"
-                                />
-                                <View
+                              )} */}
+                          <View
+                            style={[
+                              styles.inputSection,
+                              {
+                                right: numTextInputs > 1 ? 0 : normalize(-15),
+                              },
+                            ]}>
+                            <Text
+                              style={{
+                                fontSize: normalize(12),
+                                color: Colors.black,
+                              }}>
+                              Purchase price
+                            </Text>
+                            <TextInputItem
+                              viewbordercolor="red"
+                              placeholder={'0'}
+                              width={normalize(130)}
+                              height={normalize(50)}
+                              borderWidth={1}
+                              borderRadius={10}
+                              keyboardType={'numeric'}
+                              marginTop={normalize(5)}
+                              value={variant.purchase}
+                              onChangeText={text =>
+                                handleChange(text, index, 'purchase')
+                              }
+                              textColor={Colors.placeholder}
+                              placeholderTextColor={Colors.placeholder}
+                              isRightIconVisible={false}
+                              fontSize={13}
+                              fontFamily="Poppins-Medium"
+                            />
+                            {/* <View
                                   style={{
                                     flexDirection: 'row',
                                     justifyContent: 'center',
@@ -854,14 +1135,14 @@ const handleRemoveVariant = index => {
                                   <Text style={{marginLeft: 5}}>
                                     Including GST
                                   </Text>
-                                </View>
-                              </View>
-                            </View>
-                          );
-                        })}
+                                </View> */}
+                          </View>
+                        </View>
+                        {/* );
+                        })} */}
                       </View>
                     </View>
-                    <View
+                    {/* <View
                       style={{
                         justifyContent: 'space-around',
                         flexDirection: 'row',
@@ -875,14 +1156,14 @@ const handleRemoveVariant = index => {
                       <Text style={{marginLeft: normalize(50)}}>
                         Discount 0%
                       </Text>
-                    </View>
+                    </View> */}
                     <View
                       style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginHorizontal: normalize(5),
-                        marginTop: normalize(20),
+                        // marginTop: normalize(20),
                       }}>
                       <View style={styles.inputSection}>
                         <Text
@@ -900,7 +1181,7 @@ const handleRemoveVariant = index => {
                           borderWidth={1}
                           borderRadius={10}
                           marginTop={normalize(5)}
-                          value={variantData[index]?.batch_no || ''}
+                          value={variant.batch_no}
                           onChangeText={text =>
                             handleChange(text, index, 'batch_no')
                           }
@@ -930,7 +1211,7 @@ const handleRemoveVariant = index => {
                             borderWidth={1}
                             borderRadius={10}
                             marginTop={normalize(5)}
-                            value={variantData[index]?.expiryDate || ''}
+                            value={variant.expiryDate}
                             // onChangeText={val => setaddress(val)}
                             textColor={Colors.placeholder}
                             placeholderTextColor={Colors.placeholder}
@@ -969,7 +1250,7 @@ const handleRemoveVariant = index => {
                             borderWidth={1}
                             borderRadius={10}
                             marginTop={normalize(5)}
-                            value={variantData[index]?.expiryDateAlert || ''}
+                            value={variant.expiryDateAlert}
                             // onChangeText={val => setExpirydateAlert(val)}
                             textColor={Colors.placeholder}
                             placeholderTextColor={Colors.placeholder}
@@ -995,9 +1276,9 @@ const handleRemoveVariant = index => {
                             styles.dropdownButton1,
                             {bottom: normalize(6)},
                           ]}
-                          onPress={()=>toggleModal2(index)}>
+                          onPress={() => toggleModal2(index)}>
                           <Text style={styles.dropdownButtonText}>
-                          {selectedQuantity1 || 'Yes'}
+                            {variant.inclusiveGst || 'Yes'}
                           </Text>
                           <Image
                             source={Icons.down} // Replace with your down arrow image
@@ -1033,7 +1314,7 @@ const handleRemoveVariant = index => {
                           marginTop={normalize(5)}
                           // value={mobileSalePrice}
                           // onChangeText={val => setMobileSalePrice(val)}
-                          value={variantData[index]?.mobile_price || ''}
+                          value={variant.mobile_price}
                           onChangeText={text =>
                             handleChange(text, index, 'mobile_price')
                           }
@@ -1064,7 +1345,7 @@ const handleRemoveVariant = index => {
                           marginTop={normalize(5)}
                           // value={storeSalePrice}
                           // onChangeText={val => setStoreSalePrice(val)}
-                          value={variantData[index]?.store_price || ''}
+                          value={variant.store_price}
                           onChangeText={text =>
                             handleChange(text, index, 'store_price')
                           }
@@ -1104,7 +1385,7 @@ const handleRemoveVariant = index => {
                           marginTop={normalize(5)}
                           // value={WholesalePrice}
                           // onChangeText={val => setwholePrice(val)}
-                          value={variantData[index]?.wholesale_price || ''}
+                          value={variant.wholesale_price}
                           onChangeText={text =>
                             handleChange(text, index, 'wholesale_price')
                           }
@@ -1150,7 +1431,7 @@ const handleRemoveVariant = index => {
                       isVisible={CalenderVisible}
                       mode="date"
                       onConfirm={date => handleConfirm(date, index)}
-                      onCancel={()=>setCalenderVisible(false)}
+                      onCancel={() => setCalenderVisible(false)}
                     />
                     <DateTimePickerModal
                       textColor={Colors.primaryColor}
@@ -1159,11 +1440,33 @@ const handleRemoveVariant = index => {
                       isVisible={CalenderVisible1}
                       mode="date"
                       onConfirm={date => handleConfirm1(date, index)}
-                      onCancel={()=>setCalenderVisible1(false)}
+                      onCancel={() => setCalenderVisible1(false)}
                     />
                   </View>
                 )}
               </View>
+              <Modal
+                animationType="pop"
+                transparent={true}
+                visible={isModalVisible2}
+                onBackdropPress={() => setModalVisible2(false)}
+                onRequestedClose={() => setModalVisible2(false)}>
+                <View style={styles.modalContainer1}>
+                  <View style={styles.modalContent1}>
+                    <FlatList
+                      data={quantities1}
+                      keyExtractor={item => item}
+                      renderItem={({item, variantIndex}) => (
+                        <TouchableOpacity
+                          style={styles.modalItem}
+                          onPress={() => handleQuantitySelect1(item, index)}>
+                          <Text style={styles.modalItemText}>{item}</Text>
+                        </TouchableOpacity>
+                      )}
+                    />
+                  </View>
+                </View>
+              </Modal>
             </>
           ))}
 
@@ -1182,7 +1485,7 @@ const handleRemoveVariant = index => {
               <Text style={{fontSize: normalize(15), color: Colors.black}}>
                 Add Variant
               </Text>
-              <Image
+              {/* <Image
                 style={{
                   width: normalize(20),
                   height: normalize(20),
@@ -1190,7 +1493,7 @@ const handleRemoveVariant = index => {
                 }}
                 source={Icons.diamond}
                 tintColor="white"
-              />
+              /> */}
             </TouchableOpacity>
           </View>
           <View style={styles.buttonContainer}>
@@ -1201,7 +1504,9 @@ const handleRemoveVariant = index => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, {backgroundColor: Colors.green}]}
-              onPress={() => AddProductDetails()}>
+              onPress={() =>validateField()}
+              
+              >
               <Text style={styles.buttonText}>Save</Text>
             </TouchableOpacity>
           </View>
@@ -1230,28 +1535,6 @@ const handleRemoveVariant = index => {
         </View>
       </Modal>
 
-      <Modal
-        animationType="pop"
-        transparent={true}
-        visible={isModalVisible2}
-        onBackdropPress={() => setModalVisible2(false)}
-        onRequestedClose={() => setModalVisible2(false)}>
-        <View style={styles.modalContainer1}>
-          <View style={styles.modalContent1}>
-            <FlatList
-              data={quantities1}
-              keyExtractor={item => item}
-              renderItem={({item,variantIndex}) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => handleQuantitySelect1(item)}>
-                  <Text style={styles.modalItemText}>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
       <Modal
         isVisible={isModalVisible1}
         onBackdropPress={toggleModal1}
@@ -1429,8 +1712,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.placeholder,
     borderRadius: 10,
-    padding: normalize(10),
-    width: normalize(130),
+    padding: normalize(8),
+    // left:10,
+    width: normalize(120),
     height: normalize(50),
 
     backgroundColor: Colors.backGround,

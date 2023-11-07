@@ -1,4 +1,4 @@
-import React, {useState, useRef,useEffect} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,7 +14,7 @@ import SafeView from '../../components/SafeView';
 import CommonLinearGradient from '../../components/CommonLinearGradient';
 import normalize from '../../utils/helpers/dimen';
 import {Colors} from '../../themes/Colors';
-import {Icons} from '../../themes/ImagePath';
+import {Fonts, Icons} from '../../themes/ImagePath';
 import {verticalScale} from '../../utils/helpers/dimen1';
 import CommonBottomSheet from '../../components/BottomSheet';
 import TextInputItem from '../../components/TextInputItem';
@@ -23,18 +23,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import showErrorAlert from '../../utils/helpers/Toast';
 import {getProductByBarcodeRequest} from '../../redux/reducer/ProductReducer';
 import {useDispatch, useSelector} from 'react-redux';
-import Loader from '../../utils/helpers/Loader'
-
-
+import Loader from '../../utils/helpers/Loader';
+import { clearProductStatus } from '../../redux/reducer/ProductReducer';
 // import BarcodeScanner from 'react-native-scan-barcode';
 
 const AddPRoductToMyShop = props => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const [isTorchOn, setIsTorchOn] = useState(false);
   const [barcode, setBarcode] = useState('');
-  const [hasPermission, setHasPermission] = React.useState(false);
-const [isScanned, setIsScanned] = React.useState(false);
-
-  const [isScannerOpen, setScannerOpen] = useState(false);
+  const [showProduct, setShowProduct] = useState(false);
+  const item = props?.route?.params ? props?.route?.params : '';
 
   const bottomSheetRef = useRef(null);
   const dispatch = useDispatch();
@@ -43,13 +41,9 @@ const [isScanned, setIsScanned] = React.useState(false);
     setBottomSheetVisible(!isBottomSheetVisible);
     handleClosePress();
   };
-  const ProductReducer = useSelector(state => state.ProductReducer);
 
-  useEffect(() => {
-    if (barcode.length === 13) {
-      handleSearch();
-    }
-  }, [barcode]);
+  const ProductReducer = useSelector(state => state.ProductReducer);
+  console.log(ProductReducer.getProductByBarcodeRes[0]?.status, 'barocxmcxc');
 
   const handleSearch = async () => {
     if (barcode === '') {
@@ -58,10 +52,10 @@ const [isScanned, setIsScanned] = React.useState(false);
       try {
         const user_id = await AsyncStorage.getItem('user_id');
         if (user_id !== null) {
-          const formData = new FormData();
-          formData.append('user_id', user_id);
-          formData.append('barcode', barcode);
-          dispatch(getProductByBarcodeRequest(formData)); // Dispatch your Redux action here
+          let obj = new FormData();
+          obj?.append('user_id', user_id);
+          obj?.append('barcode', barcode);
+          dispatch(getProductByBarcodeRequest(obj)); // Dispatch your Redux action here
         } else {
           showErrorAlert('User ID not found. Please log in.');
         }
@@ -72,65 +66,109 @@ const [isScanned, setIsScanned] = React.useState(false);
     }
   };
 
-  let status = '';
-  if (status == '' || ProductReducer.status != status) {
-    switch (ProductReducer.status) {
-      case 'Product/getProductByBarcodeRequest':
-        status = ProductReducer.status;
-
-        break;
-      case 'Product/getProductByBarcodeSuccess':
-        status = ProductReducer.status;
-        // props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token})
-        // dispatch(productGetFromWishListRequest({ user_id }));
-        break;
-      case 'Product/getProductByBarcodeFailure':
-        status = ProductReducer.status;
-
-        break;
+  useEffect(() => {
+    if (barcode.length === 12) {
+      handleSearch();
     }
-  }
+  }, [barcode]);
 
+  useEffect(() => {
+    let status = '';
+    if (status == '' || ProductReducer.status != status) {
+      switch (ProductReducer.status) {
+        case 'Product/getProductByBarcodeRequest':
+          status = ProductReducer.status;
 
+          break;
+        case 'Product/getProductByBarcodeSuccess':
+          status = ProductReducer.status;
+          setShowProduct(true);
+          // dispatch(clearProductStatus(ProductReducer.status))
+          // props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token})
+          // dispatch(productGetFromWishListRequest({ user_id }));
+          break;
+        case 'Product/getProductByBarcodeFailure':
+          status = ProductReducer.status;
+          setShowProduct(true);
+          break;
+      }
+    }
+  }, [ProductReducer]);
 
+  const ProductBox = () => {
+    return (
+      <>
+        {/* {ProductReducer.getProductByBarcodeRes[0]?.message==="Products Found" ? ( */}
+        <View style={styles.container}>
+          <Text style={{fontSize: 15, marginBottom: normalize(40)}}>
+            {ProductReducer.getProductByBarcodeRes[0]?.status === 'Valid'
+              ? 'This is the product you were searching for?'
+              : 'product not found,are you want to add product manually ?'}
+          </Text>
+          <View style={{bottom: 20}}>
+            <Image
+              source={Icons.gift} // Replace with the actual image source
+              style={styles.productImage}
+            />
+          </View>
+          <Text style={{color: 'black'}}>
+            {ProductReducer.getProductByBarcodeRes[0]?.status === 'Valid'
+              ? ProductReducer?.getProductByBarcodeRes[0]?.product_name
+              : item?.item}
+          </Text>
+          <Text style={styles.productPrice}>
+            {ProductReducer.getProductByBarcodeRes[0]?.status === 'Valid'
+              ? `Price Rs ${ProductReducer.getProductByBarcodeRes[0]?.mrp}`
+              : ''}
+          </Text>
 
+          <View style={styles.buttonContainer1}>
+            <TouchableOpacity
+              style={styles.noButton}
+              onPress={() => setShowProduct(false)}>
+              <Text style={styles.buttonText}>No</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.yesButton}
+              onPress={() =>{
+                props?.navigation?.navigate('ProductManually', {
+                  item: item?.item,
+                })
+                // dispatch(clearProductStatus);
+              }
+              }>
+              <Text style={styles.buttonText}>Yes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {/* ) : null} */}
+      </>
+    );
+  };
 
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const handleScanIconClick = () => {
+    setScannerOpen(true);
+    props?.navigation.navigate('Barcode');
+    // Open the scanner when the QR icon is clicked
+  };
 
-
-const handleScanIconClick = () => {
-  setScannerOpen(true); // Open the scanner when the QR icon is clicked
-};
-
-// const renderScanner = () => {
-//   return (
-//     <View>
-//     <TouchableOpacity onPress={handleScanIconClick}>
-//     <Image source={Icons.qr} style={styles.icon} />
-//     </TouchableOpacity>
-    
-//     {isScannerOpen ? (
-//       <View style={{ flex: 1 }}>
-//         <BarcodeScanner
-//           onBarCodeRead={(e) => {
-//             console.log('Barcode: ' + e.data);
-//             console.log('Type: ' + e.type);
-//             // Handle the scanned barcode data as needed
-//           }}
-//           style={{ flex: 1 }}
-//         />
-//         <TouchableOpacity >
-//           <Text>Close Scanner</Text>
-//         </TouchableOpacity>
-//       </View>
-//     ) : null}
-//   </View>
-//   );
-// };
+  const renderScanner = () => {
+    return (
+      <View>
+        <TouchableOpacity onPress={handleScanIconClick}>
+          <Image source={Icons.qr} style={styles.icon} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <SafeView>
       <CommonLinearGradient heading={'Add Inventory'} />
-      <Loader visible={ProductReducer.status==='Product/getProductByBarcodeRequest'}/>
+      <Loader
+        visible={ProductReducer.status === 'Product/getProductByBarcodeRequest'}
+      />
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS == 'ios' ? 'padding' : 'height'}>
@@ -144,11 +182,13 @@ const handleScanIconClick = () => {
             }}>
             <View style={styles.inputContainer}>
               {/* Left Icon */}
-              {/* {renderScanner()} */}
+              {renderScanner()}
+
               <TextInput
                 style={styles.textInput}
                 placeholder="Enter Barcode Number"
                 value={barcode}
+                keyboardType="numeric"
                 onChangeText={text => setBarcode(text)}
               />
               <TouchableOpacity onPress={handleSearch}>
@@ -156,6 +196,7 @@ const handleScanIconClick = () => {
                 <Image source={Icons.search} style={styles.icon} />
               </TouchableOpacity>
             </View>
+            {showProduct !== false && ProductBox()}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -181,7 +222,9 @@ const handleScanIconClick = () => {
           <Text style={styles.horizontalButtonText}>Search by name</Text>
         </TouchableOpacity>
         <View style={styles.horizontalDivider} />
-        <TouchableOpacity style={styles.horizontalButton}>
+        <TouchableOpacity
+          style={styles.horizontalButton}
+          onPress={() => props?.navigation.navigate('Barcode')}>
           <Text style={styles.horizontalButtonText}>Scan barcode</Text>
         </TouchableOpacity>
       </View>
@@ -289,5 +332,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  container: {
+    backgroundColor: 'white',
+    marginHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    width: '90%',
+    height: '80%',
+    marginTop: normalize(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productImage: {
+    width: 90,
+    height: 90,
+  },
+  productName: {
+    fontSize: 15,
+    // marginTop: 10,
+    textAlign: 'justify',
+    marginHorizontal: 8,
+  },
+  productPrice: {
+    fontSize: 16,
+    marginTop: 5,
+    textAlign: 'right',
+  },
+  buttonContainer1: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    // marginLeft:10
+  },
+  yesButton: {
+    backgroundColor: 'green',
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 20,
+  },
+  noButton: {
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

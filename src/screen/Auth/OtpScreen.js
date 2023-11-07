@@ -29,6 +29,7 @@ const OtpScreen = props => {
   const [otp, setOtp] = useState('');
 
   const VerifyOtp = () => {
+    // debugger;
     if (otp === '') {
       showErrorAlert('Please Enter a valid otp');
     } else if (otp.length !== 4) {
@@ -38,6 +39,7 @@ const OtpScreen = props => {
       obj.append('token', item);
       obj.append('otp', otp);
       dispatch(otpverificationRequest(obj))
+      console.log(obj,"cnxc")
     }
   };
 

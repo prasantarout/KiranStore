@@ -70,7 +70,7 @@ export function* ProductAddSaga(action) {
 }
 
 export function* ProductDetailsSaga(action) {
-  debugger;
+  // debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
@@ -179,10 +179,10 @@ export function* GetProductByBarcodeSaga(action) {
     // contenttype: "application/json",
   };
   try {
-    let response = yield call(postApi, 'new_api/get-product-by-barcode',action?.payload,header);
-    console.log(response?.data?.response[0], 'Fsfjkfk');
-    if (response?.status == 200) {
-      yield put(getProductByBarcodeSuccess(response?.data?.response[0]));
+    let response = yield call(postApi,'new_api/get-product-by-barcode',action?.payload,header);
+    console.log(response?.response[0], 'Fsfjkfk>>>>>');
+    if (response?.response[0]?.status == "Valid") {
+      yield put(getProductByBarcodeSuccess(response?.response));
     } else {
       yield put(getProductByBarcodeFailure(response?.data));
       // showErrorAlert(response?.data?.message);
@@ -200,9 +200,9 @@ export function* GetProductDetailsSaga(action) {
     // contenttype: "application/json",
   };
   try {
-    let response = yield call(getApi, 'new_api/get-product-details',action?.payload,header);
+    let response = yield call(postApi, 'new_api/get-product-details',action?.payload,header);
     console.log(response?.data?.response[0], 'Fsfjkfk');
-    if (response?.status == 200) {
+    if (response?.response[0]?.status == "Valid") {
       yield put(getProductDetailsSuccess(response?.data?.response[0]));
     } else {
       yield put(getProductDetailsFailure(response?.data));

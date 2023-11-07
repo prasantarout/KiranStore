@@ -55,6 +55,7 @@ import ProductManually from '../screen/Home/ProductManually';
 import TabStack1 from './TopTab1';
 import BluetoothPrinter from '../screen/more/BluetoothPrinter';
 import Purchase from '../screen/Home/Purchase';
+import Barcode from '../screen/Home/Barcode';
 // import Pickup from '../components/Pickup';
 const StackNav = () => {
   const Stack = createStackNavigator();
@@ -142,6 +143,7 @@ const StackNav = () => {
     TabStack1:TabStack1,
     BluetoothPrinter:BluetoothPrinter,
     Purchase:Purchase,
+    Barcode:Barcode
     // Pickup:Pickup
   };
 

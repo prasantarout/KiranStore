@@ -180,6 +180,9 @@ const ProductSlice = createSlice({
   },
 
   },
+  clearProductStatus(state, action) {
+    state.status = '';
+  },
 });
 
 export const {
@@ -229,11 +232,11 @@ export const {
 
     addtoCartRequest,
     addtoCartSuccess,
-    addtoCartFailure
+    addtoCartFailure,
 
 
   
-  
+    clearProductStatus
 
  
 } = ProductSlice.actions;
