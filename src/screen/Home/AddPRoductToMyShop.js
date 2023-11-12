@@ -26,7 +26,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import Loader from '../../utils/helpers/Loader';
 import { clearProductStatus } from '../../redux/reducer/ProductReducer';
 // import BarcodeScanner from 'react-native-scan-barcode';
-
+import { useFocusEffect } from '@react-navigation/native';
 const AddPRoductToMyShop = props => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [isTorchOn, setIsTorchOn] = useState(false);
@@ -41,6 +41,8 @@ const AddPRoductToMyShop = props => {
     setBottomSheetVisible(!isBottomSheetVisible);
     handleClosePress();
   };
+  
+ 
 
   const ProductReducer = useSelector(state => state.ProductReducer);
   console.log(ProductReducer.getProductByBarcodeRes[0]?.status, 'barocxmcxc');
@@ -95,15 +97,23 @@ const AddPRoductToMyShop = props => {
     }
   }, [ProductReducer]);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset the state or perform any other refresh logic here
+      // setBarcode('');
+      // setShowProduct(false);
+    }, [])
+  );
+
   const ProductBox = () => {
     return (
       <>
         {/* {ProductReducer.getProductByBarcodeRes[0]?.message==="Products Found" ? ( */}
         <View style={styles.container}>
           <Text style={{fontSize: 15, marginBottom: normalize(40)}}>
-            {ProductReducer.getProductByBarcodeRes[0]?.status === 'Valid'
-              ? 'This is the product you were searching for?'
-              : 'product not found,are you want to add product manually ?'}
+            {ProductReducer.getProductByBarcodeRes[0]?.message === "No Products Found"
+              ? 'product not found,are you want to add product manually ?'
+              :  'This is the product you were searching for?'}
           </Text>
           <View style={{bottom: 20}}>
             <Image
@@ -112,14 +122,14 @@ const AddPRoductToMyShop = props => {
             />
           </View>
           <Text style={{color: 'black'}}>
-            {ProductReducer.getProductByBarcodeRes[0]?.status === 'Valid'
-              ? ProductReducer?.getProductByBarcodeRes[0]?.product_name
-              : item?.item}
+            {ProductReducer.getProductByBarcodeRes[0]?.message === "No Products Found"
+              ? item?.item
+              :ProductReducer?.getProductByBarcodeRes[0]?.product_name }
           </Text>
           <Text style={styles.productPrice}>
-            {ProductReducer.getProductByBarcodeRes[0]?.status === 'Valid'
-              ? `Price Rs ${ProductReducer.getProductByBarcodeRes[0]?.mrp}`
-              : ''}
+            {ProductReducer.getProductByBarcodeRes[0]?.message === "No Products Found"
+              ? ''
+              :`Price Rs ${ProductReducer.getProductByBarcodeRes[0]?.mrp}` }
           </Text>
 
           <View style={styles.buttonContainer1}>
@@ -201,13 +211,13 @@ const AddPRoductToMyShop = props => {
         </ScrollView>
       </KeyboardAvoidingView>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.buttonOutline}
           onPress={() => {
             props?.navigation.navigate('ProductManually');
           }}>
           <Text style={styles.buttonText1}>Edit Product</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={styles.button}
           onPress={() => props.navigation.navigate('ProductManually')}>
@@ -224,7 +234,7 @@ const AddPRoductToMyShop = props => {
         <View style={styles.horizontalDivider} />
         <TouchableOpacity
           style={styles.horizontalButton}
-          onPress={() => props?.navigation.navigate('Barcode')}>
+          onPress={() => {props?.navigation.navigate('Barcode')}}>
           <Text style={styles.horizontalButtonText}>Scan barcode</Text>
         </TouchableOpacity>
       </View>

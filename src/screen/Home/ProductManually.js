@@ -501,13 +501,6 @@ const ProductManually = props => {
     setVariants(updatedVariants);
   };
 
-  //   const handleAddMultiplePrices = (index) => {
-  //   const updatedVariants = [...variants];
-  //   updatedVariants[index].mrp.push('');      // Add a new empty MRP value
-  //   updatedVariants[index].purchase.push(''); // Add a new empty Purchase Price value
-  //   setVariants(updatedVariants);
-  // };
-
   const [variants, setVariants] = useState([
     {
       variantName: '',
@@ -582,85 +575,7 @@ const ProductManually = props => {
         dataValue = value;
       }
     });
-
-    // if (!variants) {
-    //   showErrorAlert('No variants provided');
-    //   return;
-    // }
-
-    // if (Array.isArray(variants)) {
-    //   // Handling multiple variants
-    //   let obj = new FormData();
-
-      // const sizes = [];
-      // const quantities = [];
-      // const barcodes = [];
-      // const mrps = [];
-      // const purchasePrices = [];
-      // const batchNumbers = [];
-      // const expiryDates = [];
-      // const expiryDateAlerts = [];
-      // const inclusiveGsts = [];
-      // const mobilePrices = [];
-      // const storePrices = [];
-      // const wholesalePrices = [];
-
       for (const variant of variants) {
-        // if (
-        //   !variant.variantName ||
-        //   !variant.quantity ||
-        //   !variant.barcodenumber ||
-        //   !variant.mrp ||
-        //   !variant.purchase ||
-        //   !variant.batch_no ||
-        //   !variant.expiryDate ||
-        //   !variant.expiryDateAlert ||
-        //   !variant.inclusiveGst ||
-        //   !variant.mobile_price ||
-        //   !variant.store_price ||
-        //   !variant.wholesale_price
-        // ) {
-        //   showErrorAlert('All fields are required for each variant');
-        //   return;
-        // }
-
-    //     sizes.push(variant.variantName);
-    //     quantities.push(variant.quantity);
-    //     barcodes.push(variant.barcodenumber);
-    //     mrps.push(variant.mrp);
-    //     purchasePrices.push(variant.purchase);
-    //     batchNumbers.push(variant.batch_no);
-    //     expiryDates.push(variant.expiryDate);
-    //     expiryDateAlerts.push(variant.expiryDateAlert);
-    //     inclusiveGsts.push(variant.inclusiveGst);
-    //     mobilePrices.push(variant.mobile_price);
-    //     storePrices.push(variant.store_price);
-    //     wholesalePrices.push(variant.wholesale_price);
-    //   }
-
-    //   obj.append('user_id', dataValue);
-    //   obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
-    //   obj.append('size', JSON.stringify(sizes));
-    //   obj.append('quantity', JSON.stringify(quantities));
-    //   obj.append('barcode', JSON.stringify(barcodes));
-    //   obj.append('mrp', JSON.stringify(mrps));
-    //   obj.append('purchase_price', JSON.stringify(purchasePrices));
-    //   obj.append('batch_no', JSON.stringify(batchNumbers));
-    //   obj.append('exp_date', JSON.stringify(expiryDates));
-    //   obj.append('exp_date_alert', JSON.stringify(expiryDateAlerts));
-    //   obj.append('inclusive_gst', JSON.stringify(inclusiveGsts));
-    //   obj.append('mobile_price', JSON.stringify(mobilePrices));
-    //   obj.append('store_price', JSON.stringify(storePrices));
-    //   obj.append('wholesale_price', JSON.stringify(wholesalePrices));
-
-    //   try {
-    //     await connectionrequest();
-    //     dispatch(ProductDetailsRequest(obj));
-    //   } catch (err) {
-    //     showErrorAlert('Please connect to the Internet');
-    //   }
-    // } else {
-      // Handling a single variant
       if (
         !variant.variantName ||
         !variant.quantity ||
@@ -704,6 +619,7 @@ const ProductManually = props => {
     }
   };
 
+  
   async function validateField(){
     for (const variant of variants) {
       if(product===""){

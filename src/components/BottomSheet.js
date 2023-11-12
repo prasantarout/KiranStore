@@ -14,7 +14,7 @@ const CommonBottomSheet = ({isVisible, onClose, children, close, moment}) => {
         moment === 1
           ? ['140%', '50%', '90%']
           : moment === 2
-          ? ['80%', '50%', '90%']
+          ? ['100%', '50%', '90%']
           : ['50%', '50%', '90%']
       }
       enablePanDownToClose={true}

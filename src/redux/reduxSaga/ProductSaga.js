@@ -27,6 +27,12 @@ import {
   addtoCartSuccess,
   addtoCartFailure,
   VendorListFailure,
+  getProductSuccess,
+  getProductFailure,
+  getProductByBarcodeSaleSuccess,
+  getProductByBarcodeSaleFailure,
+  createurchaseOrderSuccess,
+  createurchaseOrderFailure,
 } from '../reducer/ProductReducer';
 import showErrorAlert from '../../utils/helpers/Toast';
 import {getApi, getApiWithParam, postApi} from '../../utils/helpers/ApiRequest';
@@ -152,14 +158,14 @@ export function* AddVendorSaga(action) {
 }
 
 export function* VendorListSaga(action) {
-  debugger;
+  // debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
   };
   try {
     let response = yield call(getApiWithParam,'new_api/vendors',action?.payload,header);
-    console.log(response?.data?.response[0], 'Fsfjkfk');
+    console.log(response?.data?.response[0], 'Fsfjkfkhello');
     if (response?.data?.response[0].status === 'Valid') {
       yield put(VendorListSuccess(response?.data?.response[0]));
     } else {
@@ -194,16 +200,39 @@ export function* GetProductByBarcodeSaga(action) {
   }
 }
 
+
+export function* GetProductByBarcodeSaleSaga(action) {
+  let header = {
+    Accept: 'application/json',
+    // contenttype: "application/json",
+  };
+  try {
+    let response = yield call(postApi,'new_api/get-product-by-barcode-sale',action?.payload,header);
+    console.log(response?.response[0], 'Fsfjkfk>>>>>');
+    if (response?.response[0]?.status == "Valid") {
+      yield put(getProductByBarcodeSaleSuccess(response?.response));
+    } else {
+      yield put(getProductByBarcodeSaleFailure(response?.data));
+      // showErrorAlert(response?.data?.message);
+    }
+  } catch (error) {
+    console.log(error);
+    yield put(getProductByBarcodeSaleFailure(error));
+    // showErrorAlert(error?.response?.data?.message);
+  }
+}
+
 export function* GetProductDetailsSaga(action) {
+  // debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
   };
   try {
     let response = yield call(postApi, 'new_api/get-product-details',action?.payload,header);
-    console.log(response?.data?.response[0], 'Fsfjkfk');
+    console.log(response?.response, '==========hello');
     if (response?.response[0]?.status == "Valid") {
-      yield put(getProductDetailsSuccess(response?.data?.response[0]));
+      yield put(getProductDetailsSuccess(response?.response));
     } else {
       yield put(getProductDetailsFailure(response?.data));
       // showErrorAlert(response?.data?.message);
@@ -217,6 +246,7 @@ export function* GetProductDetailsSaga(action) {
 
 
 export function* PurchaseOrderSaga(action) {
+  debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
@@ -228,21 +258,23 @@ export function* PurchaseOrderSaga(action) {
       action?.payload,
       header,
     );
-    console.log(response?.data?.response[0], 'Fsfjkfk');
-    if (response?.status == 200) {
+    console.log(response?.response[0], 'Purchasse>>>>>>>>>>>>>>>>>');
+    if (response?.response[0]?.status == "Valid") {
       yield put(purchaseOrderSuccess(response?.data?.response[0]));
     } else {
       yield put(purchaseOrderFailure(response?.data));
       // showErrorAlert(response?.data?.message);
     }
   } catch (error) {
-    console.log(error);
+   
     yield put(purchaseOrderFailure(error));
+    console.log(error);
     // showErrorAlert(error?.response?.data?.message);
   }
 }
 
 export function* CreatePurchaseOrderSaga(action) {
+  debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
@@ -254,16 +286,17 @@ export function* CreatePurchaseOrderSaga(action) {
       action?.payload,
       header,
     );
-    console.log(response?.data?.response[0], 'Fsfjkfk');
-    if (response?.status == 200) {
-      yield put(CreateurchaseOrderSuccess(response?.data?.response[0]));
+    // console.log(response?.response[0], 'Fsfjkfk');
+    if (response?.response[0]?.status == "Valid") {
+      yield put(createurchaseOrderSuccess(response?.data?.response[0]));
     } else {
-      yield put(CreateurchaseOrderFailure(response?.data));
+      yield put(createurchaseOrderFailure(response?.data));
       // showErrorAlert(response?.data?.message);
     }
   } catch (error) {
-    console.log(error);
-     yield put(CreateurchaseOrderFailure(response?.data))
+   
+     yield put(createurchaseOrderFailure(response?.data))
+     console.log(error);
     // showErrorAlert(error?.response?.data?.message);
   }
 }
@@ -301,8 +334,8 @@ export function*  AddToCartSaga(action) {
       action?.payload,
       header,
     );
-    console.log(response?.data?.response[0], 'Fsfjkfk');
-    if (response?.status == 200) {
+    console.log(response?.response[0], '++++++++++++++++++');
+    if (response?.response[0]?.status == "Valid") {
       yield put(addtoCartSuccess(response?.data?.response[0]));
     } else {
       yield put(addtoCartFailure(response?.data));
@@ -311,6 +344,32 @@ export function*  AddToCartSaga(action) {
   } catch (error) {
     console.log(error);
      yield put(addtoCartFailure(response?.data))
+    // showErrorAlert(error?.response?.data?.message);
+  }
+}
+
+export function*  getProductSaga(action) {
+  let header = {
+    Accept: 'application/json',
+    // contenttype: "application/json",
+  };
+  try {
+    let response = yield call(
+      postApi,
+      'new_api/products',
+      action?.payload,
+      header,
+    );
+    console.log(response?.response[0]?.status, '++++++++++++++++++');
+    if (response?.response[0]?.status =='Valid') {
+      yield put(getProductSuccess(response?.response[0]?.products));
+    } else {
+      yield put(getProductFailure(response?.data));
+      // showErrorAlert(response?.data?.message);
+    }
+  } catch (error) {
+    console.log(error);
+     yield put(getProductFailure(response?.data))
     // showErrorAlert(error?.response?.data?.message);
   }
 }
@@ -341,7 +400,7 @@ const watchFunction = [
     yield takeLatest('Product/purchaseOrderRequest',PurchaseOrderSaga);
   })(),
   (function* () {
-    yield takeLatest('Product/CreateurchaseOrderRequest',CreatePurchaseOrderSaga);
+    yield takeLatest('Product/createurchaseOrderRequest',CreatePurchaseOrderSaga);
   })(),
   (function* () {
     yield takeLatest('Product/getBatchRequest',GetBatchSaga);
@@ -349,9 +408,12 @@ const watchFunction = [
   (function* () {
     yield takeLatest('Product/addtoCartRequest',AddToCartSaga);
   })(),
-  // (function* () {
-  //   yield takeLatest("Auth/refreshTokenRequest", refreshTokenSaga);
-  // })(),
+  (function* () {
+    yield takeLatest("Product/getProductRequest", getProductSaga);
+  })(),
+  (function* () {
+    yield takeLatest("Product/getProductByBarcodeSaleRequest", GetProductByBarcodeSaleSaga);
+  })(),
 ];
 
 export default watchFunction;

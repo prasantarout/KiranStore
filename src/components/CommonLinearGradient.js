@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { Fonts, Icons } from '../themes/ImagePath';
 import { Colors } from '../themes/Colors';
@@ -10,6 +10,8 @@ import {
 } from '../utils/helpers/dimen1';
 import { useNavigation } from '@react-navigation/native';
 import { normalizeUnits } from 'moment';
+import { clearBarcodeDetails } from '../redux/reducer/ProductReducer';
+import { useDispatch,useSelector } from 'react-redux';
 
 export default function CommonLinearGradient({
   heading,
@@ -21,7 +23,48 @@ export default function CommonLinearGradient({
   onPress
 }) {
   const navigation = useNavigation();
-  console.log(flag, 'Fsfm;lfml');
+ const dispatch=useDispatch();
+  const handleGoBack = () => {
+    // Show an alert to confirm going back without saving
+    Alert.alert(
+      'Confirm Go Back',
+      'Are you sure you want to go back without saving your product?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            // If the user selects "Yes", proceed to navigate back
+            navigation.goBack(); // Replace with your navigation method
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const ProductReducer = useSelector(state => state.ProductReducer)
+  let status = '';
+  if (status == '' || ProductReducer.status != status) {
+    switch (ProductReducer.status) {
+      case 'Product/getProductDetailsRequest':
+        status = ProductReducer.status;
+        break;
+      case 'Product/getProductDetailsSuccess':
+        status = ProductReducer.status;
+        console.log(status, 'Fsfdnk');
+        dispatch(clearBarcodeDetails());
+        //  dispatch(getPurchaseProductRequest())
+        break;
+      case 'Product/getProductDetailsFailure':
+        status = ProductReducer.status;
+        break;
+    }
+  }
+
 
   return (
     <LinearGradient
@@ -43,7 +86,7 @@ export default function CommonLinearGradient({
                 styles.buttonStyle1,
                 { marginLeft: flag !== 1 ? verticalScale(20) : 0 },
               ]}
-              onPress={() => navigation.goBack()}>
+              onPress={() =>{flag===16 ?handleGoBack():navigation.goBack()}}>
               <Image source={Icons.back} style={[styles.buttonImg1]} />
             </TouchableOpacity>
           )}

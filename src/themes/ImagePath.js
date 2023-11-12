@@ -51,6 +51,9 @@ export const Icons = {
     item1:require('../assets/images/item1.jpeg'),
     item2:require('../assets/images/item2.jpeg'),
     item3:require('../assets/images/item3.jpeg'),
+    leftArrow: require('../assets/images/leftArrow.png'),
+  edit: require('../assets/images/edit.png'),
+  groceries: require('../assets/images/groceries.png'),
    };
 
 

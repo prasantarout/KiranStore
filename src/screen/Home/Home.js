@@ -73,7 +73,7 @@ const Home = (props) => {
       }}
      onPress={()=>{
       if(item.id===1){
-        props.navigation.navigate('TabStack1')
+        props.navigation.navigate('TabStack1',{flag:1})
       }else if(item.id===2){
         props.navigation.navigate('MySuppliers')
       }else if(item.id===3){
@@ -299,7 +299,7 @@ const Home = (props) => {
               // paddingHorizontal: normalize(10),
               borderWidth: 1,
             }}
-            onPress={()=>props.navigation.navigate('Purchase')}
+            onPress={()=>props.navigation.navigate('Purchase',{purchaseFlag:15145})}
             >
             <Text
               style={{

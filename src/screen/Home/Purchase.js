@@ -8,6 +8,7 @@ import {
   TextInput,
   Image,
   Button,
+  FlatList,
 } from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import SafeView from '../../components/SafeView';
@@ -23,28 +24,38 @@ import CommonBottomSheet from '../../components/BottomSheet';
 import showErrorAlert from '../../utils/helpers/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import connectionrequest from '../../utils/helpers/NetInfo';
-import {
+import ProductReducer, {
+  CreateurchaseOrderRequest,
   VendorAddRequest,
   VendorListRequest,
+  clearBarcodeDetails,
+  clearProductDetails,
+  createurchaseOrderRequest,
+  getProductDetailsRequest,
+  getPurchaseProductRequest,
+  purchaseOrderRequest,
 } from '../../redux/reducer/ProductReducer';
 import {useSelector, useDispatch} from 'react-redux';
 import Loader from '../../utils/helpers/Loader';
 import {debug} from 'react-native-reanimated';
-import {Icons} from '../../themes/ImagePath';
+import {Fonts, Icons} from '../../themes/ImagePath';
 import Modal from 'react-native-modal';
+import { Alert } from 'react-native';
 // import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const Purchase = props => {
   const data = [
-    {label: 'Item 1', value: '1'},
-    {label: 'Item 2', value: '2'},
-    {label: 'Item 3', value: '3'},
-    {label: 'Item 4', value: '4'},
-    {label: 'Item 5', value: '5'},
-    {label: 'Item 6', value: '6'},
-    {label: 'Item 7', value: '7'},
-    {label: 'Item 8', value: '8'},
+    {label: 'Upi', value: '1'},
+    {label: 'Card', value: '2'},
+    {label: 'Cash', value: '3'},
   ];
+
+  const productId = props?.route?.params?.product;
+  
+  const purchaseFlag = props?.route?.params?.purchaseFlag;
+
+
+  const quantities1 = ['Yes', 'No'];
   const [value, setValue] = useState(null);
   const [isFocus, setIsFocus] = useState(false);
   const [value1, setValue1] = useState(null);
@@ -54,10 +65,23 @@ const Purchase = props => {
   const [name, setName] = useState('');
   const [address, setaddress] = useState('');
   const [phone, setPhoneNumber] = useState('');
+  const [isModalVisible2, setModalVisible2] = useState(false);
   const [email, setEmail] = useState('');
+  const [limit, setLimit] = useState(10);
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-
+  // const [CalenderVisible, setCalenderVisible] = useState(false);
+  const [CalenderVisible1, setCalenderVisible1] = useState(false);
+  const [CalenderVisible2, setCalenderVisible2] = useState(false);
   const [isModalVisible1, setIsModalVisible1] = useState(false);
+
+  const [vendor, setVendor] = useState('');
+  const [price, setPrice] = useState('');
+  const [invoice, setInvoice] = useState('');
+  const [billDate, setBillDate] = useState('');
+  const [discount, setDiscount] = useState('');
+  const [labour, setLabour] = useState('');
+  const [vehicleCharge, setVehicleCharge] = useState('');
+  const [Replaceble, setReplaceble] = useState('');
 
   const toggleModal1 = () => {
     setIsModalVisible1(!isModalVisible1);
@@ -68,20 +92,365 @@ const Purchase = props => {
   };
   const dispatch = useDispatch();
 
-  const handleConfirm = date => {
-    // setDob(moment(date).format("MM/DD/YYYY"));
-    setExpirydate(moment(date).format('MM/DD/YYYY'));
-    console.log(moment(date).format('MM/DD/YYYY'), 'Fsfnsf');
-    hideDatePicker();
+  const handleConfirm = (date, productIndex, variantIndex) => {
+   
+    const formattedDate = moment(date).format('MM/DD/YYYY');
+    
+    handleChange(formattedDate, variantIndex, productIndex, 'expiryDate');
+    setCalenderVisible(false); // Close the date picker modal
+  };
+
+  const handleConfirm1 = (date, productIndex, variantIndex) => {
+    const formattedDate = moment(date).format('MM/DD/YYYY');
+    handleChange(formattedDate, variantIndex, productIndex, 'expiryDateAlert');
+    setCalenderVisible1(false); // Close the date picker modal
+  };
+
+  const handleConfirm2 = (date, productIndex, variantIndex) => {
+    const formattedDate = moment(date).format('MM/DD/YYYY');
+    setBillDate(formattedDate);
+    // handleChange(formattedDate,variantIndex,productIndex,'expiryDateAlert');
+    setCalenderVisible2(false); // Close the date picker modal
   };
 
   const toggleBottomSheet = () => {
     setBottomSheetVisible(!isBottomSheetVisible);
     handleClosePress();
   };
+  const toggleModal2 = () => {
+    setModalVisible2(!isModalVisible2);
+  };
+
+  const handleQuantitySelect1 = (value, index, productIndex) => {
+    console.log(value, index, productIndex, '>>>>>>>>>>gst');
+    const updatedVariants = [...variants];
+    const targetVariant = updatedVariants[index].find(
+      (variant, i) => i === index,
+    );
+
+    if (targetVariant) {
+      targetVariant.inclusiveGst = value;
+      setVariants(updatedVariants);
+    }
+    setModalVisible2(false); // Close the modal after selection
+  };
+
+
+
+//*************************************************remove variant********************************************************************************************************
+
+  const handleRemoveVariant = (productIndex, variantIndex) => {
+    // Show an alert to confirm removal
+    Alert.alert(
+      'Product Remove',
+      'Are you sure you want to remove this Prooduct?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            // If the user selects "Yes", proceed to remove the variant
+            const updatedVariants = [...variants];
+            updatedVariants[productIndex].splice(variantIndex, 1);
+            setVariants(updatedVariants);
+            ProductReducer.getProductDetailsRes
+           dispatch(clearProductDetails(''));
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+  
+//*******************************end remove varinat ****************************************************
 
   const bottomSheetRef = useRef(null);
   const handleClosePress = () => bottomSheetRef.current.close();
+
+  const ProductReducer = useSelector(state => state.ProductReducer);
+
+
+  //***********************************getting vendor list***************************************
+  async function GettingItem() {
+    var dataValue;
+    await AsyncStorage.getItem('user_id').then(value => {
+      if (value != null) {
+        const data = value;
+        dataValue = data;
+      }
+    });
+    let obj = {
+      user_id: dataValue,
+    };
+    dispatch(VendorListRequest(obj));
+  }
+
+  //******************************end*********************************
+  let status = '';
+  if (status == '' || ProductReducer.status != status) {
+    switch (ProductReducer.status) {
+      case 'Product/VendorAddRequest':
+        status = ProductReducer.status;
+        break;
+      case 'Product/VendorAddSuccess':
+        status = ProductReducer.status;
+        console.log(status, 'Fsfdnk');
+        handleClosePress();
+        // props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token})
+        // dispatch(VendorListRequest({ user_id }));
+        GettingItem();
+
+        break;
+      case 'Product/VendorAddFailure':
+        status = ProductReducer.status;
+        break;
+
+      case 'Product/getProductDetailsRequest':
+        status = ProductReducer.status;
+        break;
+      case 'Product/getProductDetailsSuccess':
+        status = ProductReducer.status;
+        console.log(status, 'Fsfdnk');
+        //  dispatch(getPurchaseProductRequest())
+        break;
+      case 'Product/getProductDetailsFailure':
+        status = ProductReducer.status;
+        break;
+    }
+  }
+
+  //***********************************gettting product detials to render the varinat based on product length*************************************
+  async function getProductDetails(productId) {
+    var dataValue;
+    await AsyncStorage.getItem('user_id').then(value => {
+      if (value != null) {
+        const data = value;
+        dataValue = data;
+      }
+    });
+    let obj = new FormData();
+    obj.append('user_id', dataValue);
+    obj.append('product_id', productId.product_id);
+    obj.append('variant_id', productId.variant_id);
+  
+    // return
+    dispatch(getProductDetailsRequest(obj));
+  }
+
+// end product detials************************************
+
+
+  const [showVariants, setShowVariants] = useState(false);
+  const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
+
+ 
+ 
+  React.useEffect(() => {
+    const unsubscribe = props?.navigation.addListener('focus', () => {
+      if (
+        purchaseFlag === undefined ||
+        ProductReducer.getProductDetailsRes.length > 0
+      ) {
+        getProductDetails(productId);
+        setShowVariants(true);
+        setCurrentVariantIndex(0); // Set the initial index when navigating to the screen
+      }
+      GettingItem();
+    });
+    return unsubscribe;
+  }, [props?.navigation, isFocus, purchaseFlag, productId]);
+
+  
+  const [variants, setVariants] = useState([]);
+ 
+//***********************dynamically set variant filed with the product detials item like mrp etc*******************************************
+  useEffect(() => {
+    // debugger;
+    // Assuming getProductDetailsRes is an array of variants
+    if (ProductReducer?.getProductDetailsRes) {
+      const initialVariants = ProductReducer?.getProductDetailsRes?.map(
+        productDetails =>
+          productDetails?.map(variant => ({
+            productId: variant?.product_id,
+            variantId: variant?.variant_id,
+            product_name: variant?.product_name,
+            quantity: variant.quantity ? variant.quantity : '',
+            mrp: variant.mrp ? variant.mrp : '',
+            batch_no: variant.batch_no ? variant.batch_no : '',
+            purchase: variant.purchase_price ? variant.purchase_price : '',
+            expiryDate: variant?.exp_date ? variant?.exp_date : '',
+            expiryDateAlert: variant?.exp_date_alert
+              ? variant?.exp_date_alert
+              : '',
+            mobile_price: variant?.mobile_sale_price
+              ? variant?.mobile_sale_price
+              : '',
+            store_price: variant?.unit_store_price
+              ? variant?.unit_store_price
+              : '',
+            wholesale_price: variant?.wholesale_sale_price
+              ? variant?.wholesale_sale_price
+              : '',
+            inclusiveGst: variant?.inclusiveGst ? variant?.inclusiveGst : 'yes',
+          })),
+      );
+      setVariants(initialVariants);
+    }
+  }, [ProductReducer?.getProductDetailsRes]);
+ 
+  // end of dynamically render
+
+//**************************his method used for change the variant filed value/user can manually chnage*******************************
+const handleChange = (text, productIndex, variantIndex, property) => {
+    const updatedVariants = [...variants]; // Copy the variants array
+    updatedVariants[productIndex][variantIndex][property] = text; // Update the specific property
+    setVariants(updatedVariants);
+  };
+//***************************************************************************************** */
+  const [apiCallSuccess, setApiCallSuccess] = useState(
+    Array(variants.length).fill(false),
+  );
+  
+  /**********************generating random sessionId for add product it should be single and unique unitll user click on save button*****************************/ 
+  const generateRandomSessionId = () => {
+    // Generate a random alphanumeric string for the session ID
+    const randomSessionId = Math.random().toString(36).substring(2, 15);
+    return randomSessionId;
+  };
+  const sessionId = generateRandomSessionId();
+
+
+
+/************************************this function call for add product api call******************************************************/ 
+
+  const AddProductDetails = async () => {
+    const dataValue = await AsyncStorage.getItem('user_id');
+
+    if (!dataValue) {
+      showErrorAlert('User ID not found');
+      return;
+    }
+
+    for (let i = 0; i < variants.length; i++) {
+      const variantArray = variants[i]; // Access the inner array
+      const variant = variantArray[0];
+      console.log(variant, 'vanzxczxcx>..............');
+
+      if (
+        !variant.quantity ||
+        !variant.mrp ||
+        !variant.purchase ||
+        !variant.batch_no ||
+        !variant.expiryDate ||
+        !variant.expiryDateAlert ||
+        !variant.inclusiveGst ||
+        !variant.mobile_price ||
+        !variant.store_price ||
+        !variant.wholesale_price
+      ) {
+        showErrorAlert('All fields are required for the purchase');
+        return;
+      }
+
+      let obj = new FormData();
+      obj.append('user_id', dataValue);
+      obj.append('token', sessionId);
+      obj.append('product_id', variant.productId);
+      obj.append('variant_id', variant.variantId);
+      obj.append('quantity', variant.quantity);
+      obj.append('mrp', variant.mrp);
+      obj.append('purchase_price', variant.purchase);
+      obj.append('batch_no', variant.batch_no);
+      obj.append('exp_date', variant.expiryDate);
+      obj.append('exp_date_alert', variant.expiryDateAlert);
+      obj.append('inclusive_gst', variant.inclusiveGst);
+      obj.append('mobile_price', variant.mobile_price);
+      obj.append('store_price', variant.store_price);
+      obj.append('wholesale_price', variant.wholesale_price);
+      console.log(obj, 'Dxcnxcxc>>>>>>>>>>>');
+      // return
+      try {
+        await connectionrequest();
+        dispatch(purchaseOrderRequest(obj));
+
+        // Wait for the API call to complete before proceeding to the next variant
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Adjust the delay as needed
+
+        // Set the state for the corresponding variant based on the ProductReducer status
+        if (ProductReducer?.status === 'Product/purchaseOrderSuccess') {
+          setApiCallSuccess(prevState => {
+            const newState = [...prevState];
+            newState[i] = true;
+            return newState;
+          });
+        }
+      } catch (err) {
+        showErrorAlert('Please connect to the Internet');
+        return;
+      }
+    }
+  };
+
+/************************end of add product********************************/ 
+
+  // user_id,invoice_no,token,date,vendor_id, discount_percentage,labour_chage,vehicle_charge,replaceble
+
+
+/**********************this function is for save purchase and this is final save for purchase**************************************/ 
+
+  const SavePurchase = async() => {
+    const dataValue = await AsyncStorage.getItem('user_id');
+
+    if (!dataValue) {
+      showErrorAlert('User ID not found');
+      return;
+    }
+    if(variants.length===0){
+      showErrorAlert('Please add product on bills');
+      return;
+    }
+    if(vendor==''){
+      showErrorAlert('Please select vendor');
+      return;
+    }
+    if(invoice===''){
+      showErrorAlert('Please enter invoice');
+      return;
+    }
+    if(billDate==''){
+      showErrorAlert('please enter bill date')
+      return
+    }
+    if(discount===''){
+      showErrorAlert('please enter discount percentge')
+      return
+    }
+    if(labour===''){
+      showErrorAlert('Please enter labour charge');
+      return
+    }
+    if(vehicleCharge===''){
+      showErrorAlert('Please enter vehicle charge');
+      return
+    }
+   let obj=new FormData();
+   obj.append('user_id',dataValue)
+   obj.append('token',sessionId)
+   obj.append('vendor_id',vendor);
+   obj.append('invoice_no',invoice);
+   obj.append('discount_percentage',discount)
+   obj.append('date',billDate)
+   obj.append('labour_chage',labour)
+   obj.append('vehicle_charge',vehicleCharge)
+   obj.append('replaceble',Replaceble)
+   dispatch(createurchaseOrderRequest(obj))
+  };
+
+/**********************this function is for save purchase and this is final save for purchase**************************************/ 
+
 
   const AddSuppliers = async () => {
     var dataValue;
@@ -127,42 +496,7 @@ const Purchase = props => {
     }
   };
 
-  const ProductReducer = useSelector(state => state.ProductReducer);
-  console.log(ProductReducer?.getVendorRes?.vendors, 'sndksdsd');
 
-  async function GettingItem() {
-    var dataValue;
-    await AsyncStorage.getItem('user_id').then(value => {
-      if (value != null) {
-        const data = value;
-        dataValue = data;
-      }
-    });
-    let obj = {
-      user_id: dataValue,
-    };
-    dispatch(VendorListRequest(obj));
-  }
-
-  let status = '';
-  if (status == '' || ProductReducer.status != status) {
-    switch (ProductReducer.status) {
-      case 'Product/VendorAddRequest':
-        status = ProductReducer.status;
-        break;
-      case 'Product/VendorAddSuccess':
-        status = ProductReducer.status;
-        console.log(status, 'Fsfdnk');
-        // props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token})
-        // dispatch(VendorListRequest({ user_id }));
-        GettingItem();
-
-        break;
-      case 'Product/VendorAddFailure':
-        status = ProductReducer.status;
-        break;
-    }
-  }
 
   return (
     <SafeView>
@@ -173,11 +507,14 @@ const Purchase = props => {
         onPress={toggleBottomSheet}
       />
       <Loader visible={ProductReducer.status === 'Product/VendorAddRequest'} />
+      <Loader visible={ProductReducer.status === 'Product/getProductDetailsRequest'} />
+      <Loader visible={ProductReducer?.status === 'Product/purchaseOrderRequest'} />
+      <Loader visible={ProductReducer?.status === 'Product/createurchaseOrderRequest'} />
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS == 'ios' ? 'padding' : 'height'}>
         <ScrollView
-          contentContainerStyle={{flexGrow: 1, paddingBottom: '50%'}}
+          contentContainerStyle={{flexGrow: 1, paddingBottom: '20%'}}
           showsVerticalScrollIndicator={false}>
           <View
             style={{
@@ -204,14 +541,16 @@ const Purchase = props => {
                   // search
                   maxHeight={300}
                   labelField="name"
-                  valueField="name"
-                  placeholder={!isFocus ? 'Select vendors' : '...'}
+                  valueField="id"
+                  placeholder={!isFocus ? 'Select vendors' : '....'}
                   // searchPlaceholder="Search..."
                   value={value}
                   onFocus={() => setIsFocus(true)}
                   onBlur={() => setIsFocus(false)}
                   onChange={item => {
-                    setValue(item.value);
+                    console.log(item.name, 'dsdmdjdzvendor');
+                    setValue(item);
+                    setVendor(item?.id);
                     setIsFocus(false);
                   }}
                 />
@@ -224,7 +563,7 @@ const Purchase = props => {
                   inputSearchStyle={styles.inputSearchStyle}
                   iconStyle={styles.iconStyle}
                   data={data}
-                  search
+                  // search
                   maxHeight={300}
                   labelField="label"
                   valueField="value"
@@ -235,12 +574,13 @@ const Purchase = props => {
                   onBlur={() => setIsFocus1(false)}
                   onChange={item => {
                     setValue1(item.value);
+                    setPrice(item?.value);
                     setIsFocus1(false);
                   }}
                 />
               </View>
             </View>
-            <View style={styles.inputSection}>
+            <View style={styles.inputSection1}>
               <View style={{flex: 1, marginRight: 10}}>
                 <TextInputItem
                   viewbordercolor="red"
@@ -250,8 +590,8 @@ const Purchase = props => {
                   borderWidth={1}
                   borderRadius={10}
                   marginTop={normalize(5)}
-                  value={''}
-                  // onChangeText={val => setVariantName(val)}
+                  value={invoice}
+                  onChangeText={val => setInvoice(val)}
                   textColor={Colors.placeholder}
                   placeholderTextColor={Colors.placeholder}
                   isRightIconVisible={false}
@@ -261,7 +601,7 @@ const Purchase = props => {
               </View>
               <TouchableOpacity
                 style={{flex: 1}}
-                onPress={() => setCalenderVisible(!CalenderVisible)}>
+                onPress={() => setCalenderVisible2(!CalenderVisible2)}>
                 <TextInputItem
                   viewbordercolor="red"
                   placeholder={'Bill Date.'}
@@ -270,7 +610,7 @@ const Purchase = props => {
                   borderWidth={1}
                   borderRadius={10}
                   marginTop={normalize(5)}
-                  value={''}
+                  value={billDate}
                   // onChangeText={val => setVariantName(val)}
                   textColor={Colors.placeholder}
                   placeholderTextColor={Colors.placeholder}
@@ -282,230 +622,596 @@ const Purchase = props => {
               </TouchableOpacity>
             </View>
 
-            <View
-              style={{
-                backgroundColor: Colors.backGround,
-                elevation: 3,
-                // marginHorizontal: normalize(1),
-                paddingHorizontal: 10,
-                marginTop: normalize(12),
-                width: '100%',
-              }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <Image
-                    source={Icons.gift}
-                    style={{height: normalize(15), width: normalize(15)}}
-                  />
-                  <Text style={{color: Colors.black, marginLeft: normalize(5)}}>
-                    Ramdev Hing Premium Strong 100 g
-                  </Text>
-                </View>
-                <Text style={{color: Colors.black}}>Rs 0</Text>
-              </View>
-              <Text
-                style={{
-                  marginTop: normalize(2),
-                  textAlign: 'left',
-                  marginLeft: normalize(22),
-                }}>
-                Current Quantity: -1
-              </Text>
-              <View
-                style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                <View
-                  style={{
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    marginTop: normalize(15),
-                  }}>
-                  <TouchableOpacity
-                    style={{
-                      padding: 10,
-                      borderWidth: 1,
-                      borderRadius: 15,
-                      width: 50,
-                    }}
-                    onPress={() => toggleModal1()}>
-                    <Text style={{color: Colors.black}}>Edit</Text>
-                  </TouchableOpacity>
+            <View style={{flexDirection: 'column', marginBottom: 10}}>
+              {showVariants &&
+                variants?.map((productDetails, productIndex) =>
+                  productDetails.map((variant, variantIndex) => (
+                    <>
+                      <View
+                        style={[
+                          styles.container_section,
+                          {marginBottom: normalize(10)},
+                        ]}
+                        key={`${productIndex}-${variantIndex}`}>
+                        <View style={styles.accordionHeader}>
+                          <Text
+                            style={{
+                              color: Colors.black,
+                              marginLeft: normalize(5),
+                            }}>
+                            {variant.product_name}
+                          </Text>
+                          <View style={{flexDirection: 'row'}}>
+                            <TouchableOpacity>
+                              <Text>Rs {variant.mrp ? variant.mrp:'0'}</Text>
+                            </TouchableOpacity>
+                            {/* {numVariants > 1 &&  */}
+                            {variantIndex?.length > 0 && (
+                              <TouchableOpacity
+                                onPress={() => {
+                                  // if (numVariants > 1) {
+                                  //   setNumVariants(numVariants - 1);
+                                  // }
+                                  handleRemoveVariant(
+                                    productIndex,
+                                    variantIndex,
+                                  );
+                                }}>
+                                <Image
+                                  source={Icons.delete}
+                                  style={{
+                                    height: normalize(20),
+                                    width: normalize(20),
+                                    marginLeft: normalize(10),
+                                  }}
+                                />
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
 
-                  <View style={{flex: 1, marginTop: normalize(10)}}>
-                    <TouchableOpacity
-                      style={{padding: 10, borderWidth: 1, borderRadius: 15}}>
-                      <Text>Remove</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <View style={{flexDirection: 'column'}}>
-                  <View
-                    style={{marginTop: normalize(10), flexDirection: 'row'}}>
-                    <TextInputItem
-                      viewbordercolor="red"
-                      placeholder={'Purchase Price.'}
-                      width={normalize(100)}
-                      height={normalize(45)}
-                      borderWidth={1}
-                      borderRadius={10}
-                      marginTop={normalize(5)}
-                      value={''}
-                      // onChangeText={val => setVariantName(val)}
-                      textColor={Colors.placeholder}
-                      placeholderTextColor={Colors.placeholder}
-                      isRightIconVisible={false}
-                      fontSize={13}
-                      fontFamily="Poppins-Medium"
-                      editable={false}
-                    />
-                    <View style={{left: 5}}>
-                      <TextInputItem
-                        viewbordercolor="red"
-                        placeholder={'Quantity.'}
-                        width={normalize(100)}
-                        height={normalize(45)}
-                        borderWidth={1}
-                        borderRadius={10}
-                        marginTop={normalize(5)}
-                        value={''}
-                        // onChangeText={val => setVariantName(val)}
-                        textColor={Colors.placeholder}
-                        placeholderTextColor={Colors.placeholder}
-                        isRightIconVisible={false}
-                        fontSize={13}
-                        fontFamily="Poppins-Medium"
-                        editable={false}
-                      />
-                    </View>
-                  </View>
-                  <View
-                    style={{
-                      marginTop: normalize(10),
-                      flexDirection: 'row',
-                    }}>
-                    <TextInputItem
-                      viewbordercolor="red"
-                      placeholder={'WholeSale'}
-                      width={normalize(100)}
-                      height={normalize(45)}
-                      borderWidth={1}
-                      borderRadius={10}
-                      marginTop={normalize(5)}
-                      value={''}
-                      // onChangeText={val => setVariantName(val)}
-                      textColor={Colors.placeholder}
-                      placeholderTextColor={Colors.placeholder}
-                      isRightIconVisible={false}
-                      fontSize={13}
-                      fontFamily="Poppins-Medium"
-                      editable={false}
-                    />
-                    <View style={{left: 5}}>
-                      <TextInputItem
-                        viewbordercolor="red"
-                        placeholder={'Gst'}
-                        width={normalize(100)}
-                        height={normalize(45)}
-                        borderWidth={1}
-                        borderRadius={10}
-                        marginTop={normalize(5)}
-                        value={''}
-                        // onChangeText={val => setVariantName(val)}
-                        textColor={Colors.placeholder}
-                        placeholderTextColor={Colors.placeholder}
-                        isRightIconVisible={false}
-                        fontSize={13}
-                        fontFamily="Poppins-Medium"
-                        editable={false}
-                      />
-                    </View>
-                  </View>
-                  <View
-                    style={{
-                      marginTop: normalize(10),
-                      flexDirection: 'row',
-                    }}>
-                    <TextInputItem
-                      viewbordercolor="red"
-                      placeholder={'Discount'}
-                      width={normalize(100)}
-                      height={normalize(45)}
-                      borderWidth={1}
-                      borderRadius={10}
-                      marginTop={normalize(5)}
-                      value={''}
-                      // onChangeText={val => setVariantName(val)}
-                      textColor={Colors.placeholder}
-                      placeholderTextColor={Colors.placeholder}
-                      isRightIconVisible={false}
-                      fontSize={13}
-                      fontFamily="Poppins-Medium"
-                      editable={false}
-                    />
-                    <View style={{left: 5}}>
-                      <TextInputItem
-                        viewbordercolor="red"
-                        placeholder={'Notes'}
-                        width={normalize(100)}
-                        height={normalize(45)}
-                        borderWidth={1}
-                        borderRadius={10}
-                        marginTop={normalize(5)}
-                        value={''}
-                        // onChangeText={val => setVariantName(val)}
-                        textColor={Colors.placeholder}
-                        placeholderTextColor={Colors.placeholder}
-                        isRightIconVisible={false}
-                        fontSize={13}
-                        fontFamily="Poppins-Medium"
-                        editable={false}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
+                        <View style={styles.accordionContent}>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                            }}>
+                            <View
+                              style={[styles.inputSection, {marginLeft: 2}]}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                }}>
+                                Quantity
+                              </Text>
+                              <TextInputItem
+                                viewbordercolor="red"
+                                placeholder={'0'}
+                                width={normalize(265)}
+                                keyboardType={'numeric'}
+                                height={normalize(50)}
+                                borderWidth={1}
+                                borderRadius={10}
+                                marginTop={normalize(5)}
+                                value={
+                                  variants[productIndex][variantIndex][
+                                    'quantity'
+                                  ]
+                                }
+                                onChangeText={text =>
+                                  handleChange(
+                                    text,
+                                    productIndex,
+                                    variantIndex,
+                                    'quantity',
+                                  )
+                                }
+                                textColor={Colors.placeholder}
+                                placeholderTextColor={Colors.placeholder}
+                                isRightIconVisible={false}
+                                fontSize={13}
+                                fontFamily="Poppins-Medium"
+                              />
+                            </View>
+                          </View>
+
+                          <View
+                            style={{
+                              flexDirection: 'row', // Text inputs are horizontal
+                              justifyContent: 'space-between',
+                            }}>
+                            <View
+                              style={{
+                                // flexDirection:
+                                //   numTextInputs === 0 ? 'row' : 'column',
+                                justifyContent: 'space-between',
+                              }}>
+                              {/* {[...Array(numTextInputs).keys()].map(key => {
+                          return ( */}
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginHorizontal: normalize(5),
+                                }}>
+                                <View style={styles.inputSection}>
+                                  <Text
+                                    style={{
+                                      fontSize: normalize(12),
+                                      color: Colors.black,
+                                    }}>
+                                    Mrp
+                                  </Text>
+                                  <TextInputItem
+                                    viewbordercolor="red"
+                                    placeholder={'RS.0'}
+                                    width={normalize(125)}
+                                    height={normalize(50)}
+                                    borderWidth={1}
+                                    borderRadius={10}
+                                    marginTop={normalize(5)}
+                                    keyboardType={'numeric'}
+                                    value={variant.mrp}
+                                    onChangeText={text =>
+                                      handleChange(
+                                        text,
+
+                                        productIndex,
+                                        variantIndex,
+                                        'mrp',
+                                      )
+                                    }
+                                    textColor={Colors.placeholder}
+                                    placeholderTextColor={Colors.placeholder}
+                                    isRightIconVisible={false}
+                                    fontSize={13}
+                                    fontFamily="Poppins-Medium"
+                                  />
+                                </View>
+
+                                <View
+                                  style={[
+                                    styles.inputSection,
+                                    {marginLeft: normalize(11)},
+                                  ]}>
+                                  <Text
+                                    style={{
+                                      fontSize: normalize(12),
+                                      color: Colors.black,
+                                    }}>
+                                    Purchase price
+                                  </Text>
+                                  <TextInputItem
+                                    viewbordercolor="red"
+                                    placeholder={'0'}
+                                    width={normalize(125)}
+                                    height={normalize(50)}
+                                    borderWidth={1}
+                                    borderRadius={10}
+                                    keyboardType={'numeric'}
+                                    marginTop={normalize(5)}
+                                    value={variant.purchase}
+                                    onChangeText={text =>
+                                      handleChange(
+                                        text,
+
+                                        productIndex,
+                                        variantIndex,
+                                        'purchase',
+                                      )
+                                    }
+                                    textColor={Colors.placeholder}
+                                    placeholderTextColor={Colors.placeholder}
+                                    isRightIconVisible={false}
+                                    fontSize={13}
+                                    fontFamily="Poppins-Medium"
+                                  />
+                                </View>
+                              </View>
+                            </View>
+                          </View>
+
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginHorizontal: normalize(5),
+                              // marginTop: normalize(20),
+                            }}>
+                            <View style={styles.inputSection}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                }}>
+                                Batch
+                              </Text>
+                              <TextInputItem
+                                viewbordercolor="red"
+                                placeholder={'batch no'}
+                                width={normalize(125)}
+                                height={normalize(50)}
+                                borderWidth={1}
+                                borderRadius={10}
+                                marginTop={normalize(5)}
+                                value={variant.batch_no}
+                                onChangeText={text =>
+                                  handleChange(
+                                    text,
+
+                                    productIndex,
+                                    variantIndex,
+                                    'batch_no',
+                                  )
+                                }
+                                textColor={Colors.placeholder}
+                                placeholderTextColor={Colors.placeholder}
+                                isRightIconVisible={false}
+                                fontSize={13}
+                                fontFamily="Poppins-Medium"
+                              />
+                            </View>
+
+                            <View style={[styles.inputSection]}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                }}>
+                                Expiry date
+                              </Text>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  setCalenderVisible(!CalenderVisible)
+                                }>
+                                <TextInputItem
+                                  viewbordercolor="red"
+                                  placeholder={'Expiry date'}
+                                  width={normalize(125)}
+                                  height={normalize(50)}
+                                  borderWidth={1}
+                                  borderRadius={10}
+                                  marginTop={normalize(5)}
+                                  value={variant.expiryDate}
+                                  // onChangeText={val => setaddress(val)}
+                                  textColor={Colors.placeholder}
+                                  placeholderTextColor={Colors.placeholder}
+                                  isRightIconVisible={false}
+                                  fontSize={13}
+                                  fontFamily="Poppins-Medium"
+                                  editable={false}
+                                />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginHorizontal: normalize(5),
+                            }}>
+                            <View style={styles.inputSection}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                }}>
+                                Expiry date alert
+                              </Text>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  setCalenderVisible1(!CalenderVisible1)
+                                }>
+                                <TextInputItem
+                                  viewbordercolor="red"
+                                  placeholder={'expiry date alert'}
+                                  width={normalize(125)}
+                                  height={normalize(50)}
+                                  borderWidth={1}
+                                  borderRadius={10}
+                                  marginTop={normalize(5)}
+                                  value={variant.expiryDateAlert}
+                                  // onChangeText={val => setExpirydateAlert(val)}
+                                  textColor={Colors.placeholder}
+                                  placeholderTextColor={Colors.placeholder}
+                                  isRightIconVisible={false}
+                                  fontSize={13}
+                                  fontFamily="Poppins-Medium"
+                                  editable={false}
+                                />
+                              </TouchableOpacity>
+                            </View>
+
+                            <View style={[styles.inputSection]}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                  bottom: 15,
+                                }}>
+                                Inclusive gst
+                              </Text>
+                              <TouchableOpacity
+                                style={[
+                                  styles.dropdownButton1,
+                                  {bottom: normalize(6)},
+                                ]}
+                                onPress={() => toggleModal2(variantIndex)}>
+                                <Text style={styles.dropdownButtonText}>
+                                  {variant.inclusiveGst || 'Yes'}
+                                </Text>
+                                <Image
+                                  source={Icons.down} // Replace with your down arrow image
+                                  style={styles.downArrow}
+                                />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginHorizontal: normalize(5),
+                              // marginTop: normalize(10),
+                            }}>
+                            <View style={styles.inputSection}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                }}>
+                                Mobile sale price
+                              </Text>
+                              <TextInputItem
+                                viewbordercolor="red"
+                                placeholder={'RS.0'}
+                                width={normalize(125)}
+                                height={normalize(50)}
+                                borderWidth={1}
+                                borderRadius={10}
+                                keyboardType={'numeric'}
+                                marginTop={normalize(5)}
+                                // value={mobileSalePrice}
+                                // onChangeText={val => setMobileSalePrice(val)}
+                                value={variant.mobile_price}
+                                onChangeText={text =>
+                                  handleChange(
+                                    text,
+
+                                    productIndex,
+                                    variantIndex,
+                                    'mobile_price',
+                                  )
+                                }
+                                textColor={Colors.placeholder}
+                                placeholderTextColor={Colors.placeholder}
+                                isRightIconVisible={false}
+                                fontSize={13}
+                                fontFamily="Poppins-Medium"
+                              />
+                            </View>
+
+                            <View style={[styles.inputSection]}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                }}>
+                                Store sale price
+                              </Text>
+                              <TextInputItem
+                                viewbordercolor="red"
+                                placeholder={'0'}
+                                width={normalize(125)}
+                                height={normalize(50)}
+                                borderWidth={1}
+                                borderRadius={10}
+                                keyboardType={'numeric'}
+                                marginTop={normalize(5)}
+                                // value={storeSalePrice}
+                                // onChangeText={val => setStoreSalePrice(val)}
+                                value={variant.store_price}
+                                onChangeText={text =>
+                                  handleChange(
+                                    text,
+
+                                    productIndex,
+                                    variantIndex,
+                                    'store_price',
+                                  )
+                                }
+                                textColor={Colors.placeholder}
+                                placeholderTextColor={Colors.placeholder}
+                                isRightIconVisible={false}
+                                fontSize={13}
+                                fontFamily="Poppins-Medium"
+                              />
+                            </View>
+                          </View>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginHorizontal: normalize(5),
+                              // marginTop: normalize(10),
+                            }}>
+                            <View style={styles.inputSection}>
+                              <Text
+                                style={{
+                                  fontSize: normalize(12),
+                                  color: Colors.black,
+                                }}>
+                                Wholesale sale price
+                              </Text>
+                              {/* wholesale_price */}
+                              <TextInputItem
+                                viewbordercolor="red"
+                                placeholder={'RS.0'}
+                                width={normalize(260)}
+                                height={normalize(50)}
+                                borderWidth={1}
+                                borderRadius={10}
+                                keyboardType={'numeric'}
+                                marginTop={normalize(5)}
+                                // value={WholesalePrice}
+                                // onChangeText={val => setwholePrice(val)}
+                                value={variant.wholesale_price}
+                                onChangeText={text =>
+                                  handleChange(
+                                    text,
+
+                                    productIndex,
+                                    variantIndex,
+                                    'wholesale_price',
+                                  )
+                                }
+                                textColor={Colors.placeholder}
+                                placeholderTextColor={Colors.placeholder}
+                                isRightIconVisible={false}
+                                fontSize={13}
+                                fontFamily="Poppins-Medium"
+                              />
+                            </View>
+                          </View>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              // flex:1
+                            }}>
+                            <TouchableOpacity
+                              style={{
+                                padding: 10,
+                                borderWidth: 1,
+                                borderColor: Colors.primaryColor,
+                                borderRadius: 10,
+                                width: '45%',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                              onPress={()=>handleRemoveVariant(productIndex,variantIndex)}
+                              >
+                              <Text
+                                style={{
+                                  fontSize: 15,
+                                  fontFamily: Fonts.Poppins_Medium,
+                                  color: Colors.textColor,
+                                }}>
+                                Remove
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={{
+                                padding: 10,
+                                borderWidth: 2,
+                                // borderColor: Colors.primaryColor,
+                                backgroundColor: Colors.darkblue,
+                                borderRadius: 10,
+                                width: '45%',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginLeft: 10,
+                              }}
+                              onPress={() =>
+                                AddProductDetails(productIndex, variantIndex)
+                              }
+                              disabled={apiCallSuccess[productIndex]}>
+                              <Text
+                                style={{
+                                  fontSize: 15,
+                                  fontFamily: Fonts.Poppins_Medium,
+                                  color: Colors.white,
+                                }}>
+                                Add
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                          <DateTimePickerModal
+                            textColor={Colors.primaryColor}
+                            backdropStyleIOS={Colors.primaryColor}
+                            buttonTextColorIOS={Colors.primaryColor}
+                            isVisible={CalenderVisible}
+                            mode="date"
+                            onConfirm={date =>
+                              handleConfirm(date, variantIndex, productIndex)
+                            }
+                            onCancel={() => setCalenderVisible(false)}
+                          />
+                          <DateTimePickerModal
+                            textColor={Colors.primaryColor}
+                            backdropStyleIOS={Colors.primaryColor}
+                            buttonTextColorIOS={Colors.primaryColor}
+                            isVisible={CalenderVisible1}
+                            mode="date"
+                            onConfirm={date =>
+                              handleConfirm1(date, variantIndex, productIndex)
+                            }
+                            onCancel={() => setCalenderVisible1(false)}
+                          />
+                        </View>
+                      </View>
+                      <Modal
+                        animationType="pop"
+                        transparent={true}
+                        visible={isModalVisible2}
+                        onBackdropPress={() => setModalVisible2(false)}
+                        onRequestedClose={() => setModalVisible2(false)}>
+                        <View style={styles.modalContainer1}>
+                          <View style={styles.modalContent1}>
+                            <FlatList
+                              data={quantities1}
+                              keyExtractor={item => item}
+                              renderItem={({item, index}) => (
+                                <TouchableOpacity
+                                  style={styles.modalItem}
+                                  onPress={() =>
+                                    handleQuantitySelect1(
+                                      item,
+                                      productIndex,
+                                      index,
+                                    )
+                                  }>
+                                  <Text style={styles.modalItemText}>
+                                    {item}
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
+                            />
+                          </View>
+                        </View>
+                      </Modal>
+                    </>
+                  )),
+                )}
             </View>
+            <DateTimePickerModal
+              textColor={Colors.primaryColor}
+              backdropStyleIOS={Colors.primaryColor}
+              buttonTextColorIOS={Colors.primaryColor}
+              isVisible={CalenderVisible2}
+              mode="date"
+              onConfirm={date => handleConfirm2(date)}
+              onCancel={() => setCalenderVisible2(false)}
+            />
           </View>
-
           <View style={styles.inputSections}>
             <View style={styles.inputRow}>
-              <Text style={styles.label}>CGST:</Text>
+              <Text style={styles.labelName}>Total Amount:</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Rs 0"
-                textAlign="left"
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>SGST:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Rs 0"
-                textAlign="left"
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Extra:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Rs 0"
-                textAlign="left"
-              />
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.label}>Total Amount:</Text>
-              <TextInput
-                style={styles.input}
+                style={styles.input1}
                 placeholder="Rs 0"
                 textAlign="left"
               />
             </View>
           </View>
-          <View
+          {/* <View
             style={{
               // marginTop: normalize(20),
               backgroundColor: Colors.lightbackground,
@@ -528,25 +1234,148 @@ const Purchase = props => {
               <Text style={{color: Colors.black}}>Total Disc:Rs 0</Text>
               <Text style={{color: Colors.black}}>Subtotal: Rs.0</Text>
             </View>
-          </View>
-          <View
-            style={{marginHorizontal: normalize(10), marginTop: normalize(10)}}>
-            <TextInputItem
-              viewbordercolor="red"
-              placeholder={'Enter Details.'}
-              //   width={normalize(140)}
-              height={normalize(45)}
-              borderWidth={1}
-              borderRadius={10}
-              marginTop={normalize(5)}
-              value={''}
-              // onChangeText={val => setVariantName(val)}
-              textColor={Colors.placeholder}
-              placeholderTextColor={Colors.placeholder}
-              isRightIconVisible={false}
-              fontSize={13}
-              fontFamily="Poppins-Medium"
-            />
+          </View> */}
+          <View style={{flexDirection: 'column'}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginHorizontal: normalize(15),
+                marginTop: normalize(20),
+              }}>
+              <View style={styles.inputSection}>
+                <Text
+                  style={{
+                    fontSize: normalize(12),
+                    color: Colors.black,
+                  }}>
+                  Discount Percentage
+                </Text>
+                <TextInputItem
+                  viewbordercolor="red"
+                  placeholder={'Discount Percentage'}
+                  width={normalize(140)}
+                  height={normalize(50)}
+                  borderWidth={1}
+                  borderRadius={10}
+                  keyboardType={'numeric'}
+                  marginTop={normalize(5)}
+                  value={discount}
+                  onChangeText={val => setDiscount(val)}
+                  // value={variant.mobile_price}
+                  // onChangeText={text =>
+                  //   handleChange(text, index, 'mobile_price')
+                  // }
+                  textColor={Colors.placeholder}
+                  placeholderTextColor={Colors.placeholder}
+                  isRightIconVisible={false}
+                  fontSize={13}
+                  fontFamily="Poppins-Medium"
+                />
+              </View>
+
+              <View style={[styles.inputSection]}>
+                <Text
+                  style={{
+                    fontSize: normalize(12),
+                    color: Colors.black,
+                  }}>
+                  Labour Chage
+                </Text>
+                <TextInputItem
+                  viewbordercolor="red"
+                  placeholder={'Labour Chage'}
+                  width={normalize(140)}
+                  height={normalize(50)}
+                  borderWidth={1}
+                  borderRadius={10}
+                  keyboardType={'numeric'}
+                  marginTop={normalize(5)}
+                  value={labour}
+                  onChangeText={val => setLabour(val)}
+                  // value={variant.store_price}
+                  // onChangeText={text =>
+                  //   handleChange(text, index, 'store_price')
+                  // }
+                  textColor={Colors.placeholder}
+                  placeholderTextColor={Colors.placeholder}
+                  isRightIconVisible={false}
+                  fontSize={13}
+                  fontFamily="Poppins-Medium"
+                />
+              </View>
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginHorizontal: normalize(15),
+                // marginTop: normalize(20),
+              }}>
+              <View style={styles.inputSection}>
+                <Text
+                  style={{
+                    fontSize: normalize(12),
+                    color: Colors.black,
+                  }}>
+                  Vehicle Charge
+                </Text>
+                <TextInputItem
+                  viewbordercolor="red"
+                  placeholder={'vehicle charge'}
+                  width={normalize(140)}
+                  height={normalize(50)}
+                  borderWidth={1}
+                  borderRadius={10}
+                  keyboardType={'numeric'}
+                  marginTop={normalize(5)}
+                  value={vehicleCharge}
+                  onChangeText={val => setVehicleCharge(val)}
+                  // value={variant.mobile_price}
+                  // onChangeText={text =>
+                  //   handleChange(text, index, 'mobile_price')
+                  // }
+                  textColor={Colors.placeholder}
+                  placeholderTextColor={Colors.placeholder}
+                  isRightIconVisible={false}
+                  fontSize={13}
+                  fontFamily="Poppins-Medium"
+                />
+              </View>
+
+              <View style={[styles.inputSection]}>
+                <Text
+                  style={{
+                    fontSize: normalize(12),
+                    color: Colors.black,
+                  }}>
+                  Replaceble
+                </Text>
+                <TextInputItem
+                  viewbordercolor="red"
+                  placeholder={'Replaceble'}
+                  width={normalize(140)}
+                  height={normalize(50)}
+                  borderWidth={1}
+                  borderRadius={10}
+                  // keyboardType={'numeric'}
+                  marginTop={normalize(5)}
+                  value={Replaceble}
+                  onChangeText={val => setReplaceble(val)}
+                  // value={variant.store_price}
+                  // onChangeText={text =>
+                  //   handleChange(text, index, 'store_price')
+                  // }
+                  textColor={Colors.placeholder}
+                  placeholderTextColor={Colors.placeholder}
+                  isRightIconVisible={false}
+                  fontSize={13}
+                  fontFamily="Poppins-Medium"
+                />
+              </View>
+            </View>
           </View>
           <TouchableOpacity
             style={{
@@ -584,7 +1413,9 @@ const Purchase = props => {
               borderRadius: 10,
               marginHorizontal: 10,
               marginTop: normalize(20),
-            }}>
+            }}
+            onPress={SavePurchase}
+            >
             <Text
               style={{
                 fontSize: normalize(20),
@@ -603,11 +1434,13 @@ const Purchase = props => {
             onConfirm={handleConfirm}
             onCancel={hideDatePicker}
           />
-          <CommonBottomSheet
-            isVisible={isBottomSheetVisible}
-            onClose={toggleBottomSheet}
-            close={bottomSheetRef}
-            moment={2}>
+        </ScrollView>
+        <CommonBottomSheet
+          isVisible={isBottomSheetVisible}
+          onClose={toggleBottomSheet}
+          close={bottomSheetRef}
+          moment={2}>
+          <ScrollView showsVerticalScrollIndicator={false}>
             <View style={{marginTop: normalize(10)}}>
               <TextInputItem
                 viewbordercolor="red"
@@ -718,10 +1551,10 @@ const Purchase = props => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </CommonBottomSheet>
-        </ScrollView>
+          </ScrollView>
+        </CommonBottomSheet>
       </KeyboardAvoidingView>
-      <Modal
+      {/* <Modal
         isVisible={isModalVisible1}
         onBackdropPress={toggleModal1}
         style={{
@@ -742,13 +1575,9 @@ const Purchase = props => {
               top: normalize(10),
               position: 'absolute',
               right: normalize(93),
-              // justifyContent: 'center',
-              // alignItems: 'center',
+          
             }}>
-            {/* <Image
-              style={{height: normalize(100), width: normalize(100)}}
-              source={Icons.premium}
-            /> */}
+           
             <Text
               style={{
                 fontSize: normalize(13),
@@ -888,7 +1717,16 @@ const Purchase = props => {
             <Text>Save</Text>
           </TouchableOpacity>
         </View>
-      </Modal>
+      </Modal> */}
+      <DateTimePickerModal
+        textColor={Colors.primaryColor}
+        backdropStyleIOS={Colors.primaryColor}
+        buttonTextColorIOS={Colors.primaryColor}
+        isVisible={CalenderVisible1}
+        mode="date"
+        onConfirm={date => handleConfirm1(date, index)}
+        onCancel={() => setCalenderVisible1(false)}
+      />
     </SafeView>
   );
 };
@@ -935,7 +1773,7 @@ const styles = StyleSheet.create({
     height: 40,
     fontSize: 16,
   },
-  inputSection: {
+  inputSection1: {
     marginTop: 15,
     flexDirection: 'row',
   },
@@ -943,25 +1781,28 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'stretch',
-    marginHorizontal: normalize(10),
+    // width:'90%',
+    marginHorizontal: normalize(12),
     backgroundColor: Colors.rejectedBtnColor,
     // bottom: normalize(20),
     marginTop: normalize(20),
+    borderRadius: 10,
   },
   inputRow: {
     flexDirection: 'row',
     // alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    bottom: 10,
     margin: 10,
+    borderRadius: 10,
   },
-  label: {
+  labelName: {
     width: 100, // Adjust the width as needed
     fontSize: 16,
     marginTop: 20,
     color: Colors.black,
   },
-  input: {
+  input1: {
     // flex: 1,
     // borderWidth: 1,
     borderBottomWidth: 1,
@@ -971,5 +1812,178 @@ const styles = StyleSheet.create({
     height: 40,
     flex: 0.6,
     width: 50,
+  },
+
+  accordionContent: {
+    padding: 10,
+  },
+  inputSection: {
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    paddingLeft: 10,
+  },
+
+  image: {
+    width: 80, // Adjust the width as needed
+    height: 80, // Adjust the height as needed
+    resizeMode: 'contain',
+  },
+  rightContent: {
+    flex: 1,
+    marginLeft: 20, // Add spacing between the image and right content
+  },
+  textInputSection: {
+    marginBottom: 20, // Add spacing between sections
+  },
+  dropdownSection: {
+    backgroundColor: Colors.lightGrey,
+    padding: normalize(3),
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    // Add styling for the custom dropdown section
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    paddingLeft: 10,
+    marginTop: 5,
+  },
+  dropdownButton1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.placeholder,
+    borderRadius: 10,
+    padding: normalize(10),
+    width: normalize(125),
+    height: normalize(50),
+
+    // marginTop: 5,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.placeholder,
+    borderRadius: 10,
+    padding: normalize(8),
+    // left:10,
+    width: normalize(120),
+    height: normalize(50),
+
+    backgroundColor: Colors.backGround,
+    // marginTop: 5,
+  },
+  dropdownButtonText: {
+    flex: 1,
+  },
+  downArrow: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    width: normalize(100),
+    marginHorizontal: normalize(170),
+    marginBottom: normalize(28),
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  modalContainer1: {
+    flex: 1,
+    justifyContent: 'center',
+    position: 'absolute',
+    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent1: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    width: normalize(100),
+    marginHorizontal: normalize(170),
+    // marginTop:normalize(300),
+
+    bottom: 0,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  modalItem: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    // borderBottomWidth: 1,
+    borderBottomColor: 'gray',
+  },
+  modalItemText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  container_section: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    width: '100%',
+    // margin: 10,
+  },
+  accordionHeader: {
+    backgroundColor: 'lightgray',
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerText: {
+    fontWeight: 'bold',
+  },
+  accordionContent: {
+    padding: 10,
+  },
+  inputSection: {
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    paddingLeft: 10,
+  },
+  container_section1: {
+    alignItems: 'center', // Center the content horizontally
+    // marginTop: 30,
+  },
+  inputContainers: {
+    flexDirection: 'row', // Arrange children horizontally
+    alignItems: 'center', // Center children vertically
+    borderBottomWidth: 1,
+    borderColor: 'gray',
+    // borderRadius: 5,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+  },
+  textInputs: {
+    flex: 1, // Take up remaining space
+    marginLeft: 10, // Add spacing between icon and TextInput
   },
 });

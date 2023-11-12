@@ -17,22 +17,23 @@ import {
 } from 'react-native-vision-camera';
 import {scanBarcodes, BarcodeFormat} from 'vision-camera-code-scanner';
 import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withTiming,
-    withRepeat,
-  } from 'react-native-reanimated';
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+} from 'react-native-reanimated';
 import {Colors} from '../../themes/Colors';
 import {Fonts, Icons} from '../../themes/ImagePath';
 import Loader from '../../utils/helpers/Loader';
 import {ActivityIndicator} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductReducer, {
+  clearBarcodeDetails,
   getProductByBarcodeRequest,
+  getProductByBarcodeSuccess,
 } from '../../redux/reducer/ProductReducer';
 import {useDispatch, useSelector} from 'react-redux';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 
 const Barcode = props => {
   const [cameraPermission, setCameraPermission] = useState();
@@ -48,11 +49,10 @@ const Barcode = props => {
 
   console.log(ProductReducer?.getProductByBarcodeRes?.length, 'fsfncxbc');
   const dispatch = useDispatch();
-  const {flag}=props?.route?.params ? props?.route?.params:'';
-  console.log(flag,"SDKSDN")
+  const {flag} = props?.route?.params ? props?.route?.params : '';
+  console.log(flag, 'SDKSDN');
   let device = devices.back;
- const isFocus=useIsFocused();
- 
+  const isFocus = useIsFocused();
 
   useEffect(() => {
     (async () => {
@@ -61,41 +61,41 @@ const Barcode = props => {
     })();
   }, []);
 
-
-
-const offset = useSharedValue(100);
+  const offset = useSharedValue(100);
   const animatedStyles = useAnimatedStyle(() => ({
-    transform: [{ translateY: offset.value+160 }],
+    transform: [{translateY: offset.value + 160}],
   }));
 
   React.useEffect(() => {
     offset.value = withRepeat(
-      withTiming(-offset.value-25, { duration: 1500 }),
-       -1,
-      true
+      withTiming(-offset.value - 25, {duration: 1500}),
+      -1,
+      true,
     );
   }, []);
 
+  const frameProcessor = useFrameProcessor(
+    frame => {
+      'worklet';
+      const detectedBarcodes = scanBarcodes(frame, [BarcodeFormat.ALL_FORMATS]);
+      const barcodesStr = detectedBarcodes
+        .map(barcode => barcode.displayValue)
+        .join('');
 
-  const frameProcessor = useFrameProcessor(frame => {
-    'worklet';
-    const detectedBarcodes = scanBarcodes(frame, [BarcodeFormat.ALL_FORMATS]);
-    const barcodesStr = detectedBarcodes
-      .map(barcode => barcode.displayValue)
-      .join('');
+      if (barcodesStr) {
+        setCameraLoader(true);
+        REA.runOnJS(setCameraLoader)(true);
+        REA.runOnJS(setDummy)(false);
+        REA.runOnJS(setData)(barcodesStr);
+        //   setData(barcodesStr);
 
-    if (barcodesStr) {
-      setCameraLoader(true);
-      REA.runOnJS(setCameraLoader)(true);
-      REA.runOnJS(setDummy)(false);
-      REA.runOnJS(setData)(barcodesStr);
-      //   setData(barcodesStr);
-
-      // Handle the barcode data as needed
-      console.log('Scanned Barcode:', barcodesStr);
-      //   props.navigation.navigate('AddPRoductToMyShop', { barcodeData: barcodesStr });
-    }
-  }, [isFocus]);
+        // Handle the barcode data as needed
+        console.log('Scanned Barcode:', barcodesStr);
+        //   props.navigation.navigate('AddPRoductToMyShop', { barcodeData: barcodesStr });
+      }
+    },
+    [isFocus],
+  );
 
   const refreshScreen = () => {
     // Put the logic you want to execute when the screen is focused here
@@ -132,12 +132,14 @@ const offset = useSharedValue(100);
     obj.append('user_id', dataValue);
     dispatch(getProductByBarcodeRequest(obj));
     // setCameraLoader(true);
-    console.log(obj,"csjkcznxcn")
+    console.log(obj, 'csjkcznxcn');
   };
 
   let status = '';
 
   useEffect(() => {
+    let isMounted = true;
+
     if (status === '' || ProductReducer.status !== status) {
       switch (ProductReducer.status) {
         case 'Product/getProductByBarcodeRequest':
@@ -146,21 +148,49 @@ const offset = useSharedValue(100);
 
         case 'Product/getProductByBarcodeSuccess':
           status = ProductReducer.status;
-          setCameraLoader(false);
-          if(flag===1){
-            props?.navigation?.push('ProductManually',{item:data});
-            console.log(data,">>>>>>>>>>>>>>.")
-          }else{
-            props?.navigation?.replace('AddPRoductToMyShop',{item:data});
+
+          if (flag === 1) {
+            props?.navigation?.navigate('ProductManually', {item: data});
+          } else if (flag === 2) {
+            props?.navigation?.navigate('TabStack1', {
+              screen: 'AllStock',
+              params: {
+                item: data,
+              },
+            });
+          } else {
+            props?.navigation?.replace('AddPRoductToMyShop', {item: data});
           }
+
+          // dispatch(clearBarcodeDetails())
+          // dispatch(getProductByBarcodeSuccess(''));
           break;
+
         case 'Product/getProductByBarcodeFailure':
           status = ProductReducer.status;
-          setCameraLoader(false);
+          break;
+
+        default:
           break;
       }
     }
-  }, [ProductReducer]);
+
+    return () => {
+      isMounted = false; // Cleanup function: Set isMounted to false when unmounted
+    };
+  }, [ProductReducer, flag, data]);
+
+  // }, [ProductReducer]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Put the logic you want to execute when the screen is focused here
+      setCameraLoader(false);
+      setData('');
+      setDummy(true);
+      // barcodeScanned.value = false;
+    }, []),
+  );
 
   if (device && cameraPermission === 'authorized') {
     return (
@@ -231,7 +261,7 @@ const offset = useSharedValue(100);
 
           <View style={styles.container}>
             {!cameraLoader && (
-               <Animated.View style={[styles.square, animatedStyles]} />
+              <Animated.View style={[styles.square, animatedStyles]} />
             )}
           </View>
         </View>
@@ -342,10 +372,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'red', // You can change the color as needed
   },
 });
-
-
-
-
 
 //   const animatedValue = useRef(new Animated.Value(0)).current;
 //   const [isTop, setIsTop] = useState(true);

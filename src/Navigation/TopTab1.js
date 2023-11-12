@@ -10,7 +10,8 @@ import CommonLinearGradient from '../components/CommonLinearGradient';
 import LowStock from '../screen/Home/LowStock';
 const Tab = createMaterialTopTabNavigator();
 
-function TabStack1() {
+function TabStack1(props) {
+  const flag=props?.route?.params;
     return (
       <SafeView>
        <CommonLinearGradient heading={'Add Products'} flag={10}/>
@@ -33,6 +34,7 @@ function TabStack1() {
         <Tab.Screen
           name="AllStock"
           component={AllStock}
+          initialParams={{ flag: flag }}
           options={{
             tabBarLabel: 'All Stocks',
           }}  />
