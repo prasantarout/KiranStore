@@ -33,6 +33,14 @@ import {
   getProductByBarcodeSaleFailure,
   createurchaseOrderSuccess,
   createurchaseOrderFailure,
+  finalSaleSuccess,
+  finalSaleFailure,
+  updateProductQuantitySuccess,
+  updateProductQuantityFailure,
+  deleteCartSuccess,
+  deleteCartFailure,
+  getSaleCartDetailsSuccess,
+  getSaleCartDetailsFailure,
 } from '../reducer/ProductReducer';
 import showErrorAlert from '../../utils/helpers/Toast';
 import {getApi, getApiWithParam, postApi} from '../../utils/helpers/ApiRequest';
@@ -334,12 +342,13 @@ export function*  AddToCartSaga(action) {
       action?.payload,
       header,
     );
-    console.log(response?.response[0], '++++++++++++++++++');
+    console.log(response?.response[0]?.message, '++++++++++++++++++addtocart');
     if (response?.response[0]?.status == "Valid") {
       yield put(addtoCartSuccess(response?.data?.response[0]));
+      showErrorAlert(response?.response[0]?.message);
     } else {
       yield put(addtoCartFailure(response?.data));
-      // showErrorAlert(response?.data?.message);
+      showErrorAlert(response?.response[0]?.message);
     }
   } catch (error) {
     console.log(error);
@@ -347,6 +356,107 @@ export function*  AddToCartSaga(action) {
     // showErrorAlert(error?.response?.data?.message);
   }
 }
+
+export function* GetCartDetailsSaga(action) {
+  // debugger;
+  let header = {
+    Accept: 'application/json',
+    // contenttype: "application/json",
+  };
+  try {
+    let response = yield call(postApi, 'new_api/getCartDetails',action?.payload,header);
+    console.log(response?.response, '==========hello');
+    if (response?.response[0]?.status == "Valid") {
+      yield put(getSaleCartDetailsSuccess(response?.response));
+    } else {
+      yield put(getSaleCartDetailsFailure(response?.data));
+      // showErrorAlert(response?.data?.message);
+    }
+  } catch (error) {
+    console.log(error);
+    yield put(getSaleCartDetailsFailure(error));
+    // showErrorAlert(error?.response?.data?.message);
+  }
+}
+
+export function*  finalSaleSaga(action) {
+  let header = {
+    Accept: 'application/json',
+    // contenttype: "application/json",
+  };
+  try {
+    let response = yield call(
+      postApi,
+      'new_api/final-sale',
+      action?.payload,
+      header,
+    );
+    console.log(response?.response[0], '++++++++++++++++++addtocart');
+    if (response?.response[0]?.status == "Valid") {
+      yield put(finalSaleSuccess(response?.data?.response[0]));
+    } else {
+      yield put(finalSaleFailure(response?.data));
+      // showErrorAlert(response?.data?.message);
+    }
+  } catch (error) {
+    console.log(error);
+     yield put(finalSaleFailure(response?.data))
+    // showErrorAlert(error?.response?.data?.message);
+  }
+}
+
+export function* updateProductQuantitySaga(action) {
+  let header = {
+    Accept: 'application/json',
+    // contenttype: "application/json",
+  };
+  try {
+    let response = yield call(
+      postApi,
+      'new_api/updatecartProductQty',
+      action?.payload,
+      header,
+    );
+    console.log(response?.response[0], '++++++++++++++++++addtocart');
+    if (response?.response[0]?.status == "Valid") {
+      yield put(updateProductQuantitySuccess(response?.data?.response[0]));
+    } else {
+      yield put(updateProductQuantityFailure(response?.data));
+      // showErrorAlert(response?.data?.message);
+    }
+  } catch (error) {
+    console.log(error);
+     yield put(updateProductQuantityFailure(response?.data))
+    // showErrorAlert(error?.response?.data?.message);
+  }
+}
+
+export function* deletSaleCartSaga(action) {
+  let header = {
+    Accept: 'application/json',
+    // contenttype: "application/json",
+  };
+  try {
+    let response = yield call(
+      postApi,
+      'new_api/deletecartProduct',
+      action?.payload,
+      header,
+    );
+    console.log(response?.response[0], '++++++++++++++++++addtocart');
+    if (response?.response[0]?.status == "Valid") {
+      yield put(deleteCartSuccess(response?.data?.response[0]));
+    } else {
+      yield put(deleteCartFailure(response?.data));
+      // showErrorAlert(response?.data?.message);
+    }
+  } catch (error) {
+    console.log(error);
+     yield put(deleteCartFailure(response?.data))
+    // showErrorAlert(error?.response?.data?.message);
+  }
+}
+
 
 export function*  getProductSaga(action) {
   let header = {
@@ -413,6 +523,19 @@ const watchFunction = [
   })(),
   (function* () {
     yield takeLatest("Product/getProductByBarcodeSaleRequest", GetProductByBarcodeSaleSaga);
+  })(),
+  (function* () {
+    yield takeLatest("Product/finalSaleRequest", finalSaleSaga);
+  })(),
+  (function* () {
+    yield takeLatest("Product/updateProductQuantityRequest", updateProductQuantitySaga);
+  })(),
+
+  (function* () {
+    yield takeLatest("Product/deleteCartRequest",deletSaleCartSaga);
+  })(),
+  (function* () {
+    yield takeLatest("Product/getSaleCartDetailsRequest",GetCartDetailsSaga);
   })(),
 ];
 

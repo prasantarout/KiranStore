@@ -17,7 +17,12 @@ import moment from 'moment';
 import {get} from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 import {useDispatch, useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { addtoCartRequest, getProductRequest, getSaleCartDetailsRequest } from '../../redux/reducer/ProductReducer';
+import {
+  addtoCartRequest,
+  getProductRequest,
+  getSaleCartDetailsRequest,
+} from '../../redux/reducer/ProductReducer';
+import Loader from '../../utils/helpers/Loader';
 const {width} = Dimensions.get('screen');
 const NewBill = props => {
   const [type, setType] = useState('retail');
@@ -52,9 +57,13 @@ const NewBill = props => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(10);
+  const [openBarcodeModal, setOpenBarcodeModal] = useState(false);
 
   const ProductReducer = useSelector(state => state.ProductReducer);
-  console.log(ProductReducer?.getProductByBarcodeSaleRes,">>>>>>>>>>>>>>>>>>>>>>product")
+  console.log(
+    ProductReducer?.getCartDetailsRes[0]?.cartItems,
+    '>>>>>>>>>>>>>>>>>>>>>>product',
+  );
   // const isFocus = useIsFocused();
   const dispatch = useDispatch();
 
@@ -101,35 +110,6 @@ const NewBill = props => {
   const [editCartId, setEditCartId] = useState(0);
   const toggleQuickEditModal = () => {
     setIsQuickEditModal(!isQuickEditModal);
-  };
-
-  const handleGetProduct = async () => {
-    try {
-      const user_id = await AsyncStorage.getItem('user_id');
-      if (user_id !== null) {
-        let obj = new FormData();
-        obj?.append('user_id', user_id);
-        obj?.append('start', currentPage);
-        obj?.append('limit', limit);
-        dispatch(getProductRequest(obj)); // Dispatch your Redux action here
-      } else {
-        showErrorAlert('User ID not found. Please log in.');
-      }
-    } catch (error) {
-      // showErrorAlert('An error occurred while searching for the product.');
-      console.error(error);
-    }
-  };
-  useEffect(() => {
-    setCurrentPage(1);
-    handleGetProduct();
-  }, [isFocus, searchQuery]);
-
-  const loadMoreProducts = () => {
-    if (!loading && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-      handleGetProduct();
-    }
   };
 
   const addDiscountModal = () => {
@@ -1144,16 +1124,19 @@ const NewBill = props => {
     );
   };
 
-
-  const generateRandomSessionId = () => {
-    // Generate a random alphanumeric string for the session ID
-    const randomSessionId = Math.random().toString(36).substring(2, 15);
-    return randomSessionId;
+  const generateRandomInvoiceNumber = () => {
+    const randomInvoiceNumber = Math.random()
+      .toString(36)
+      .substring(2, 10)
+      .toUpperCase();
+    return `INV-${randomInvoiceNumber}`;
   };
-  const sessionId = generateRandomSessionId();
- 
- 
-  const AddToCart=async()=>{
+
+  const invoiceNumber = generateRandomInvoiceNumber();
+
+  /*********************add to cart function to add product into cart*************************/
+  const AddToCart = async item => {
+    console.log(item, 'SDdmsdmsd');
     var dataValue;
     await AsyncStorage.getItem('user_id').then(value => {
       if (value != null) {
@@ -1161,16 +1144,21 @@ const NewBill = props => {
         dataValue = data;
       }
     });
-    
+    let sessionId = 'DEKUSR' + dataValue;
+    // console.log(typeof sessionId,"Fcmxzcmxz")
+
     let obj = new FormData();
     obj.append('user_id', dataValue);
-    obj.append('sale_id',sessionId);
-    obj.append('invoice_no',sessionId);
-    obj.append('sid',sessionId);
+    obj.append('sale_id', item?.sale_id);
+    obj.append('invoice_no', invoiceNumber);
+    obj.append('sid', sessionId);
+    obj.append('batch_no', item?.batch_no);
+    console.log(obj, 'smcsmsmdsdkd');
     dispatch(addtoCartRequest(obj));
-  }
+  };
 
-  const getCartDetails=async()=>{
+  /**********************get product from cart after searching through barcode then this function should call***************************************/
+  const getCartDetails = async () => {
     var dataValue;
     await AsyncStorage.getItem('user_id').then(value => {
       if (value != null) {
@@ -1178,20 +1166,39 @@ const NewBill = props => {
         dataValue = data;
       }
     });
-    
+    let sessionId = 'DEKUSR' + dataValue;
     let obj = new FormData();
     obj.append('user_id', dataValue);
-    obj.append('sid',sessionId);
+    obj.append('sid', sessionId);
+    // console.log(obj,"VVVVVVVVVVVVVVVVVVVVVVVV")
     dispatch(getSaleCartDetailsRequest(obj));
+  };
+
+  if (status === '' || ProductReducer.status !== status) {
+    switch (ProductReducer.status) {
+      case 'Product/addtoCartRequest':
+        status = ProductReducer.status;
+        break;
+
+      case 'Product/addtoCartSuccess':
+        status = ProductReducer.status;
+        getCartDetails();
+        break;
+      case 'Product/addtoCartFailure':
+        status = ProductReducer.status;
+        break;
+      default:
+        break;
+    }
   }
 
-  // React.useEffect(() => {
-  //   const unsubscribe = props?.navigation.addListener('focus', () => {
-      
-  //   });
-  //   return unsubscribe;
-  // }, [navigation]);
-
+  const loadMoreProducts = () => {
+    if (!loading && currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      getCartDetails();
+    }
+  };
+  /**********************end get product from cart after searching through barcode then this function should call***************************************/
 
   let status = '';
   if (status == '' || ProductReducer.status != status) {
@@ -1206,11 +1213,22 @@ const NewBill = props => {
       case 'Product/addtoCartFailure':
         status = ProductReducer.status;
         break;
-    
+      default:
+        break;
     }
   }
+  /*********************call this useEffect function when back to this sceen after successfully search product through barcodre*************************/
 
+  useEffect(() => {
+    if (ProductReducer?.status === 'Product/getProductByBarcodeSaleSuccess') {
+      setIsAddProductModal(!isAddProductModal);
+    }
+  }, [ProductReducer?.status, isFocus, searchQuery]);
 
+  /*****************final sale api call************************/
+  const finalSale = () => {};
+
+  /******************product render ******************************/
 
   const renderProductItem = ({item}) => {
     console.log(item, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
@@ -1243,14 +1261,20 @@ const NewBill = props => {
               {/* <Text>Mobile Sale Price: {item.mobile_sale_price}</Text> */}
               {/* <Text>Unit Store Price: {item.unit_store_price}</Text> */}
               {/* <Text>Wholesale Sale Price:{item.wholesale_sale_price}</Text> */}
-              <Text>avaliable_stock:{item.avaliable_stock}</Text>
+              <Text>avaliable_stock:{item.balance_stock}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.addButton} onPress={AddToCart}>
-            <Text style={{color: 'white', fontWeight: '700', fontSize: 14}}>
-              Add
-            </Text>
-          </TouchableOpacity>
+          {!ProductReducer.getCartDetailsRes[0]?.cartItems?.some(
+            cartItem => cartItem?.product_id === item?.product_id,
+          ) && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => AddToCart(item)}>
+              <Text style={{color: 'white', fontWeight: '700', fontSize: 14}}>
+                Add
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       );
     }
@@ -1275,6 +1299,9 @@ const NewBill = props => {
             width: '100%',
             height: '90%',
           }}>
+          <Loader
+            visible={ProductReducer?.status === 'Product/addtoCartRequest'}
+          />
           <View
             style={{
               paddingTop: normalize(15),
@@ -1298,7 +1325,7 @@ const NewBill = props => {
               />
             </View>
             <FlatList
-              data={ProductReducer?.getProductRes} // Use your product data from Redux here
+              data={ProductReducer?.getProductByBarcodeSaleRes[0]?.products} // Use your product data from Redux here
               renderItem={renderProductItem}
               keyExtractor={(item, index) => index.toString()}
               contentContainerStyle={{
@@ -1335,7 +1362,6 @@ const NewBill = props => {
 
             item.totalAmount =
               parseInt(item.priceByQuantity) * parseInt(item.quantity);
-
             newarr.push(item);
           } else {
             if (item.quantity == 1) {
@@ -2009,6 +2035,7 @@ const NewBill = props => {
 
   return (
     <SafeView backgroundColor={Colors.white}>
+      <Loader visible={ProductReducer?.status === 'Product/addtoCartRequest'} />
       {/* <View
         style={{
           height: normalize(36),
@@ -2252,7 +2279,10 @@ const NewBill = props => {
       </View>
 
       <View style={{flex: 1, paddingTop: normalize(20)}}>
-        <FlatList data={allCart} renderItem={ItemCard} />
+        <FlatList
+         data={[...allCart, ...ProductReducer.getCartDetailsRes[0]?.cartItems]}
+          renderItem={ItemCard}
+        />
         <View
           style={{
             height: normalize(60),

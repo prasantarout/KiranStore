@@ -18,7 +18,14 @@ const initialState = {
   scannedProducts: [],
   getPurchaseProduct:[],
   getProductByBarcodeSaleRes:{},
-  getCartDetailsRes:{}
+  getCartDetailsRes:{},
+  gettingProductSalesRes:[],
+  finalSaleRes:{},
+  updateCartProductQunatityRes:{},
+  deleteCartProductQuantityRes:{}
+
+
+
 };
 
 const ProductSlice = createSlice({
@@ -113,9 +120,12 @@ const ProductSlice = createSlice({
     },
     getProductByBarcodeSaleSuccess(state, action) {
       // console.log(action.payload,"Ffffffffff")
+      // let tempArr=[];
+      // gettingProductSalesRes
       state.getProductByBarcodeSaleRes = action.payload;
       state.status = action.type;
     },
+    
     getProductByBarcodeSaleFailure(state, action) {
       state.error = action.error;
       state.status = action.type;
@@ -221,6 +231,49 @@ const ProductSlice = createSlice({
       state.status = action.type;
     },
    
+    
+    
+    finalSaleRequest(state, action) {
+      state.status = action.type;
+    },
+    finalSaleSuccess(state, action) {
+      // console.log(action.payload,"Ffffffffff")
+      state.finalSaleRes = action.payload;
+      state.status = action.type;
+    },
+    finalSaleFailure(state, action) {
+      state.error = action.error;
+      state.status = action.type;
+    },
+
+
+    updateProductQuantityRequest(state, action) {
+      state.status = action.type;
+    },
+    updateProductQuantitySuccess(state, action) {
+      // console.log(action.payload,"Ffffffffff")
+      state.updateCartProductQunatityRes = action.payload;
+      state.status = action.type;
+    },
+    updateProductQuantityFailure(state, action) {
+      state.error = action.error;
+      state.status = action.type;
+    },
+
+
+    deleteCartRequest(state, action) {
+      state.status = action.type;
+    },
+    deleteCartSuccess(state, action) {
+      // console.log(action.payload,"Ffffffffff")
+      state.deleteCartProductQuantityRes = action.payload;
+      state.status = action.type;
+    },
+    deleteCartFailure(state, action) {
+      state.error = action.error;
+      state.status = action.type;
+    },
+
      mergeProductsReq(state, action) {
       const scannedProduct = action.payload;
       // Check if the scanned product is not already in the scannedProducts array
@@ -310,6 +363,19 @@ export const {
   getSaleCartDetailsRequest,
   getSaleCartDetailsSuccess,
   getSaleCartDetailsFailure,
+
+
+  finalSaleRequest,
+  finalSaleSuccess,
+  finalSaleFailure,
+
+  deleteCartRequest,
+  deleteCartSuccess,
+  deleteCartFailure,
+
+  updateProductQuantityRequest,
+  updateProductQuantitySuccess,
+  updateProductQuantityFailure,
 
   getPurchaseProductRequest
 } = ProductSlice.actions;

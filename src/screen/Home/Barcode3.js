@@ -62,8 +62,6 @@ import {
       })();
     }, []);
   
-  
-  
   const offset = useSharedValue(100);
     const animatedStyles = useAnimatedStyle(() => ({
       transform: [{ translateY: offset.value+160 }],
