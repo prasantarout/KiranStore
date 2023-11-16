@@ -21,12 +21,16 @@ import TextInputItem from '../../components/TextInputItem';
 import {horizontalScale} from '../../utils/helpers/dimen1';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import showErrorAlert from '../../utils/helpers/Toast';
-import {getProductByBarcodeRequest} from '../../redux/reducer/ProductReducer';
+import {
+  clearBarcodeDetailsRequest,
+  clearBarcodeDetailsSuccess,
+  getProductByBarcodeRequest,
+} from '../../redux/reducer/ProductReducer';
 import {useDispatch, useSelector} from 'react-redux';
 import Loader from '../../utils/helpers/Loader';
-import { clearProductStatus } from '../../redux/reducer/ProductReducer';
+import {clearProductStatus} from '../../redux/reducer/ProductReducer';
 // import BarcodeScanner from 'react-native-scan-barcode';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 const AddPRoductToMyShop = props => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [isTorchOn, setIsTorchOn] = useState(false);
@@ -41,8 +45,6 @@ const AddPRoductToMyShop = props => {
     setBottomSheetVisible(!isBottomSheetVisible);
     handleClosePress();
   };
-  
- 
 
   const ProductReducer = useSelector(state => state.ProductReducer);
   console.log(ProductReducer.getProductByBarcodeRes[0]?.status, 'barocxmcxc');
@@ -102,7 +104,7 @@ const AddPRoductToMyShop = props => {
       // Reset the state or perform any other refresh logic here
       // setBarcode('');
       // setShowProduct(false);
-    }, [])
+    }, []),
   );
 
   const ProductBox = () => {
@@ -111,9 +113,10 @@ const AddPRoductToMyShop = props => {
         {/* {ProductReducer.getProductByBarcodeRes[0]?.message==="Products Found" ? ( */}
         <View style={styles.container}>
           <Text style={{fontSize: 15, marginBottom: normalize(40)}}>
-            {ProductReducer.getProductByBarcodeRes[0]?.message === "No Products Found"
+            {ProductReducer.getProductByBarcodeRes[0]?.message ===
+            'No Products Found'
               ? 'product not found,are you want to add product manually ?'
-              :  'This is the product you were searching for?'}
+              : 'This is the product you were searching for?'}
           </Text>
           <View style={{bottom: 20}}>
             <Image
@@ -122,31 +125,35 @@ const AddPRoductToMyShop = props => {
             />
           </View>
           <Text style={{color: 'black'}}>
-            {ProductReducer.getProductByBarcodeRes[0]?.message === "No Products Found"
+            {ProductReducer.getProductByBarcodeRes[0]?.message ===
+            'No Products Found'
               ? item?.item
-              :ProductReducer?.getProductByBarcodeRes[0]?.product_name }
+              : ProductReducer?.getProductByBarcodeRes[0]?.product_name}
           </Text>
           <Text style={styles.productPrice}>
-            {ProductReducer.getProductByBarcodeRes[0]?.message === "No Products Found"
+            {ProductReducer.getProductByBarcodeRes[0]?.message ===
+            'No Products Found'
               ? ''
-              :`Price Rs ${ProductReducer.getProductByBarcodeRes[0]?.mrp}` }
+              : `Price Rs ${ProductReducer.getProductByBarcodeRes[0]?.mrp}`}
           </Text>
 
           <View style={styles.buttonContainer1}>
             <TouchableOpacity
               style={styles.noButton}
-              onPress={() => setShowProduct(false)}>
+              onPress={() =>{
+                  setShowProduct(false)
+                  // dispatch(clearBarcodeDetailsRequest({}))
+              }}>
               <Text style={styles.buttonText}>No</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.yesButton}
-              onPress={() =>{
+              onPress={() => {
                 props?.navigation?.navigate('ProductManually', {
                   item: item?.item,
-                })
+                });
                 // dispatch(clearProductStatus);
-              }
-              }>
+              }}>
               <Text style={styles.buttonText}>Yes</Text>
             </TouchableOpacity>
           </View>
@@ -158,8 +165,9 @@ const AddPRoductToMyShop = props => {
 
   const [scannerOpen, setScannerOpen] = useState(false);
   const handleScanIconClick = () => {
-    setScannerOpen(true);
+    // setScannerOpen(true);
     props?.navigation.navigate('Barcode');
+    dispatch(clearBarcodeDetailsRequest({}));
     // Open the scanner when the QR icon is clicked
   };
 
@@ -234,7 +242,10 @@ const AddPRoductToMyShop = props => {
         <View style={styles.horizontalDivider} />
         <TouchableOpacity
           style={styles.horizontalButton}
-          onPress={() => {props?.navigation.navigate('Barcode')}}>
+          onPress={() => {
+            props?.navigation.navigate('Barcode');
+            dispatch(clearBarcodeDetailsRequest({}));
+          }}>
           <Text style={styles.horizontalButtonText}>Scan barcode</Text>
         </TouchableOpacity>
       </View>

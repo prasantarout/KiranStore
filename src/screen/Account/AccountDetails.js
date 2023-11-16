@@ -46,6 +46,7 @@ const AccountDetails = props => {
 
   const Logout=()=>{
     AsyncStorage.removeItem('login');
+    AsyncStorage.removeItem('number')
     props.navigation.navigate('Login');
   }
 

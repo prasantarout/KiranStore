@@ -13,17 +13,23 @@ import Modal from 'react-native-modal';
 import TextInputItem from '../../components/TextInputItem';
 import {TextInput} from 'react-native';
 import showErrorAlert from '../../utils/helpers/Toast';
-import moment from 'moment';
+// import moment from 'moment';
 import {get} from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 import {useDispatch, useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   addtoCartRequest,
+  deleteCartRequest,
+  finalSaleRequest,
   getProductRequest,
   getSaleCartDetailsRequest,
+  updateProductQuantityRequest,
 } from '../../redux/reducer/ProductReducer';
 import Loader from '../../utils/helpers/Loader';
 const {width} = Dimensions.get('screen');
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import moment from 'moment';
+// import { number } from 'prop-types';
 const NewBill = props => {
   const [type, setType] = useState('retail');
   const [isFocus, setIsFocus] = useState(false);
@@ -40,6 +46,7 @@ const NewBill = props => {
   const [isAdditionalDetails, setIsAdditionalDetails] = useState(false);
   const [isAddCustomerModal, setIsAddCustomerModal] = useState(false);
   const [isAddProductModal, setIsAddProductModal] = useState(false);
+  const [CalenderVisible, setCalenderVisible] = useState(false);
 
   const [productName, setProductName] = useState('');
   const [quantity, setQuantity] = useState('1');
@@ -58,6 +65,11 @@ const NewBill = props => {
   const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(10);
   const [openBarcodeModal, setOpenBarcodeModal] = useState(false);
+
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState(null);
+  const [address, setAddress] = useState('');
+  const [dob, setDob] = useState('');
 
   const ProductReducer = useSelector(state => state.ProductReducer);
   console.log(
@@ -110,6 +122,15 @@ const NewBill = props => {
   const [editCartId, setEditCartId] = useState(0);
   const toggleQuickEditModal = () => {
     setIsQuickEditModal(!isQuickEditModal);
+  };
+
+  const hideDatePicker = () => {
+    setCalenderVisible(false);
+  };
+
+  const handleConfirm = (date, productIndex, variantIndex) => {
+    setDob(moment(date).format('YYYY/MM/DD'));
+    hideDatePicker(); // Close the date picker modal
   };
 
   const addDiscountModal = () => {
@@ -899,9 +920,10 @@ const NewBill = props => {
                   borderRadius={10}
                   marginTop={normalize(5)}
                   marginBottom={normalize(0)}
+                  keyboardType={'numeric'}
                   color={'#001840'}
-                  value={cashCollected}
-                  onChangeText={val => setCashCollected(val)}
+                  value={phone}
+                  onChangeText={val => setPhone(val)}
                   textColor={Colors.placeholder}
                   placeholderTextColor={Colors.placeholder}
                   isRightIconVisible={false}
@@ -919,8 +941,8 @@ const NewBill = props => {
                   marginTop={normalize(5)}
                   marginBottom={normalize(0)}
                   color={'#001840'}
-                  value={cashCollected}
-                  onChangeText={val => setCashCollected(val)}
+                  value={name}
+                  onChangeText={val => setName(val)}
                   textColor={Colors.placeholder}
                   placeholderTextColor={Colors.placeholder}
                   isRightIconVisible={false}
@@ -931,7 +953,7 @@ const NewBill = props => {
             </View>
 
             <TextInputItem
-              placeholder={'Notes'}
+              placeholder={'Address'}
               width={'95%'}
               height={normalize(45)}
               borderWidth={1}
@@ -939,33 +961,36 @@ const NewBill = props => {
               marginTop={normalize(5)}
               marginBottom={normalize(8)}
               color={'#001840'}
-              value={cashCollected}
-              onChangeText={val => setCashCollected(val)}
+              value={address}
+              onChangeText={val => setAddress(val)}
               textColor={Colors.placeholder}
               placeholderTextColor={Colors.placeholder}
               isRightIconVisible={false}
               fontSize={13}
               fontFamily="Poppins-Medium"
             />
-
-            <TextInputItem
-              placeholder={'Enter Birth date'}
-              width={'95%'}
-              height={normalize(45)}
-              borderWidth={1}
-              borderRadius={10}
-              marginTop={normalize(5)}
-              marginBottom={normalize(8)}
-              color={'#001840'}
-              value={cashCollected}
-              onChangeText={val => setCashCollected(val)}
-              textColor={Colors.placeholder}
-              placeholderTextColor={Colors.placeholder}
-              isRightIconVisible={false}
-              fontSize={13}
-              fontFamily="Poppins-Medium"
-            />
-            <TextInputItem
+            <TouchableOpacity
+              onPress={() => setCalenderVisible(!CalenderVisible)}>
+              <TextInputItem
+                placeholder={'Enter Birth date'}
+                width={'95%'}
+                height={normalize(45)}
+                borderWidth={1}
+                borderRadius={10}
+                marginTop={normalize(5)}
+                marginBottom={normalize(8)}
+                color={'#001840'}
+                value={dob}
+                onChangeText={val => setDob(val)}
+                textColor={Colors.placeholder}
+                placeholderTextColor={Colors.placeholder}
+                isRightIconVisible={false}
+                fontSize={13}
+                fontFamily="Poppins-Medium"
+                editable={false}
+              />
+            </TouchableOpacity>
+            {/* <TextInputItem
               placeholder={'Address'}
               width={'95%'}
               height={normalize(45)}
@@ -981,8 +1006,8 @@ const NewBill = props => {
               isRightIconVisible={false}
               fontSize={13}
               fontFamily="Poppins-Medium"
-            />
-            <TextInputItem
+            /> */}
+            {/* <TextInputItem
               placeholder={'Party Discount'}
               width={'95%'}
               height={normalize(45)}
@@ -998,11 +1023,11 @@ const NewBill = props => {
               isRightIconVisible={false}
               fontSize={13}
               fontFamily="Poppins-Medium"
-            />
+            /> */}
           </View>
 
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <Pressable
+            <TouchableOpacity
               style={{
                 height: normalize(40),
                 width: '45%',
@@ -1013,7 +1038,8 @@ const NewBill = props => {
                 marginBottom: normalize(15),
                 borderRadius: normalize(5),
                 alignSelf: 'center',
-              }}>
+              }}
+              onPress={() => setIsAddCustomerModal(false)}>
               <Text
                 style={{
                   color: Colors.white,
@@ -1023,8 +1049,8 @@ const NewBill = props => {
                 }}>
                 Cancel
               </Text>
-            </Pressable>
-            <Pressable
+            </TouchableOpacity>
+            <TouchableOpacity
               style={{
                 height: normalize(40),
                 width: '45%',
@@ -1035,6 +1061,16 @@ const NewBill = props => {
                 marginBottom: normalize(15),
                 borderRadius: normalize(5),
                 alignSelf: 'center',
+              }}
+              onPress={() => {
+                if (name == '' || dob == '' || phone == null || address == '') {
+                  showErrorAlert('All fields are required');
+                } else if (phone.length < 10 || phone.length > 10) {
+                  showErrorAlert('Phone number must be 10 digits');
+                } else {
+                  setIsAddCustomerModal(false);
+                  showErrorAlert('Save successfully');
+                }
               }}>
               <Text
                 style={{
@@ -1045,7 +1081,7 @@ const NewBill = props => {
                 }}>
                 Save
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1124,17 +1160,59 @@ const NewBill = props => {
     );
   };
 
-  const generateRandomInvoiceNumber = () => {
-    const randomInvoiceNumber = Math.random()
-      .toString(36)
-      .substring(2, 10)
-      .toUpperCase();
-    return `INV-${randomInvoiceNumber}`;
+  /*********************add to cart function to add product into cart*************************/
+  const generateRandomString = length => {
+    const characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters.charAt(randomIndex);
+    }
+
+    return result;
   };
 
-  const invoiceNumber = generateRandomInvoiceNumber();
+  const getOrGenerateRandomString = async () => {
+    try {
+      // Check if the random string is already stored in AsyncStorage
+      let randomString = await AsyncStorage.getItem('randomString');
+      if (!randomString) {
+        randomString = generateRandomString(6); // Adjust the length as needed
+        await AsyncStorage.setItem('randomString', randomString);
+      }
 
-  /*********************add to cart function to add product into cart*************************/
+      return randomString;
+    } catch (error) {
+      // Handle errors here
+      console.error('Error while getting or generating randomString:', error);
+      return null;
+    }
+  };
+
+  const generateRandomInvoiceNumber = () => {
+    const randomString = generateRandomString(8); // Adjust the length as needed
+    return `INV-${randomString}`;
+  };
+
+  const getOrGenerateInvoiceNumber = async () => {
+    try {
+      // Check if the invoice number is already stored in AsyncStorage
+      let invoiceNumber = await AsyncStorage.getItem('invoiceNumber');
+      if (!invoiceNumber) {
+        invoiceNumber = generateRandomInvoiceNumber(); // Adjust the length as needed
+        await AsyncStorage.setItem('invoiceNumber', invoiceNumber);
+      }
+
+      return invoiceNumber;
+    } catch (error) {
+      // Handle errors here
+      console.error('Error while getting or generating invoiceNumber:', error);
+      return null;
+    }
+  };
+
   const AddToCart = async item => {
     console.log(item, 'SDdmsdmsd');
     var dataValue;
@@ -1144,9 +1222,9 @@ const NewBill = props => {
         dataValue = data;
       }
     });
-    let sessionId = 'DEKUSR' + dataValue;
-    // console.log(typeof sessionId,"Fcmxzcmxz")
-
+    const randomString = await getOrGenerateRandomString();
+    const invoiceNumber = await getOrGenerateInvoiceNumber();
+    let sessionId = randomString + dataValue;
     let obj = new FormData();
     obj.append('user_id', dataValue);
     obj.append('sale_id', item?.sale_id);
@@ -1166,31 +1244,52 @@ const NewBill = props => {
         dataValue = data;
       }
     });
-    let sessionId = 'DEKUSR' + dataValue;
+    const randomString = await AsyncStorage.getItem('randomString');
     let obj = new FormData();
     obj.append('user_id', dataValue);
-    obj.append('sid', sessionId);
+    obj.append('sid', randomString + dataValue);
     // console.log(obj,"VVVVVVVVVVVVVVVVVVVVVVVV")
     dispatch(getSaleCartDetailsRequest(obj));
   };
 
-  if (status === '' || ProductReducer.status !== status) {
-    switch (ProductReducer.status) {
-      case 'Product/addtoCartRequest':
-        status = ProductReducer.status;
-        break;
-
-      case 'Product/addtoCartSuccess':
-        status = ProductReducer.status;
-        getCartDetails();
-        break;
-      case 'Product/addtoCartFailure':
-        status = ProductReducer.status;
-        break;
-      default:
-        break;
+  useEffect(() => {
+    let status1 = '';
+    if (status1 === '' || ProductReducer.status !== status1) {
+      switch (ProductReducer.status) {
+        case 'Product/getSaleCartDetailsRequest':
+          status1 = ProductReducer.status;
+          break;
+        case 'Product/getSaleCartDetailsSuccess':
+          status1 = ProductReducer.status;
+          // getCartDetails();
+          const cartItems = ProductReducer?.getCartDetailsRes[0]?.cartItems;
+          console.log(cartItems, 'ssncxnzz');
+          if (Array.isArray(cartItems)) {
+            const newArr = [
+              ...allCart,
+              ...cartItems.map(item => ({
+                id: item.product_id,
+                productName: item.prodName,
+                quantity: item.qty,
+                batch_no: item?.batch_no,
+                // priceByQuantity: item.priceByQuantity,
+                totalAmount: parseInt(item.qty) * parseInt(item.sub_total),
+                entry_id: item?.entry_id,
+              })),
+            ];
+            console.log(newArr);
+            // Setting the state with the updated array
+            setAllCart(newArr);
+          }
+          break;
+        case 'Product/getSaleCartDetailsFailure':
+          status1 = ProductReducer.status;
+          break;
+        default:
+          break;
+      }
     }
-  }
+  }, [ProductReducer?.status]);
 
   const loadMoreProducts = () => {
     if (!loading && currentPage < totalPages) {
@@ -1199,24 +1298,70 @@ const NewBill = props => {
     }
   };
   /**********************end get product from cart after searching through barcode then this function should call***************************************/
+  useEffect(() => {
+    let status = '';
+    //  debugger;
+    if (status === '' || ProductReducer.status !== status) {
+      switch (ProductReducer.status) {
+        case 'Product/addtoCartRequest':
+          status = ProductReducer.status;
+          break;
+        case 'Product/addtoCartSuccess':
+          status = ProductReducer.status;
+          getCartDetails();
+          setIsAddProductModal(false);
 
-  let status = '';
-  if (status == '' || ProductReducer.status != status) {
-    switch (ProductReducer.status) {
-      case 'Product/addtoCartRequest':
-        status = ProductReducer.status;
-        break;
-      case 'Product/addtoCartSuccess':
-        status = ProductReducer.status;
-        getCartDetails();
-        break;
-      case 'Product/addtoCartFailure':
-        status = ProductReducer.status;
-        break;
-      default:
-        break;
+          break;
+        case 'Product/addtoCartFailure':
+          status = ProductReducer.status;
+          break;
+        default:
+          break;
+      }
     }
-  }
+  }, [ProductReducer?.status]);
+
+  useEffect(() => {
+    let status = '';
+    //  debugger;
+    if (status === '' || ProductReducer.status !== status) {
+      switch (ProductReducer.status) {
+        case 'Product/updateProductQuantityRequest':
+          status = ProductReducer.status;
+          break;
+        case 'Product/updateProductQuantitySuccess':
+          status = ProductReducer.status;
+          getCartDetails();
+          break;
+
+        case 'Product/updateProductQuantityFailure':
+          status = ProductReducer.status;
+        default:
+          break;
+      }
+    }
+  }, [ProductReducer?.status]);
+
+  useEffect(() => {
+    let status = '';
+    if (status === '' || ProductReducer.status !== status) {
+      switch (ProductReducer.status) {
+        case 'Product/deleteCartRequest':
+          status = ProductReducer.status;
+          break;
+        case 'Product/deleteCartSuccess':
+          status = ProductReducer.status;
+          getCartDetails();
+          props?.navigation.goBack();
+          break;
+        case 'Product/deleteCartFailure':
+          status = ProductReducer.status;
+        default:
+          break;
+      }
+    }
+  }, [ProductReducer?.status]);
+
   /*********************call this useEffect function when back to this sceen after successfully search product through barcodre*************************/
 
   useEffect(() => {
@@ -1226,9 +1371,62 @@ const NewBill = props => {
   }, [ProductReducer?.status, isFocus, searchQuery]);
 
   /*****************final sale api call************************/
-  const finalSale = () => {};
+  // user_id,sid,invoice_no,uname,mobile,address,dob,anv_date
+  const finalSale = async () => {
+    var dataValue;
+    await AsyncStorage.getItem('user_id').then(value => {
+      if (value != null) {
+        const data = value;
+        dataValue = data;
+      }
+    });
+    const randomInvoiceNumber = await AsyncStorage.getItem('invoiceNumber');
+    const randomString = await AsyncStorage.getItem('randomString');
+
+    if (phone == '' || name == '' || address == '') {
+      showErrorAlert('Please add customer details');
+    } else if (value == null) {
+      showErrorAlert('please select payment mode');
+    } else if (allCart.length === 0) {
+      showErrorAlert('Please add at least one product into bill');
+    } else {
+      let obj = new FormData();
+      obj.append('user_id', dataValue);
+      obj.append('sid', randomString + dataValue);
+      obj.append('invoice_no', randomInvoiceNumber);
+      obj.append('uname', name);
+      obj.append('mobile', phone);
+      obj.append('address', address);
+      obj.append('payment_type', value);
+      obj.append('dob', dob);
+      // console.log(obj, 'cxncxzncnxzcn,xz>>>>>>>>>>>');
+      // return;
+      dispatch(finalSaleRequest(obj));
+    }
+  };
 
   /******************product render ******************************/
+  useEffect(() => {
+    let status = '';
+    if (status === '' || ProductReducer.status !== status) {
+      switch (ProductReducer.status) {
+        case 'Product/finalSaleRequest':
+          status = ProductReducer.status;
+          break;
+        case 'Product/finalSaleSuccess':
+          status = ProductReducer.status;
+          // getCartDetails();
+          props?.navigation.goBack();
+          AsyncStorage.removeItem('invoiceNumber');
+          AsyncStorage.removeItem('randomString');
+          break;
+        case 'Product/finalSaleFailure':
+          status = ProductReducer.status;
+        default:
+          break;
+      }
+    }
+  }, [ProductReducer?.status]);
 
   const renderProductItem = ({item}) => {
     console.log(item, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
@@ -1515,7 +1713,11 @@ const NewBill = props => {
                 }}>
                 <TouchableOpacity
                   onPress={() => {
-                    cartPlusMinusQuantity(item.id, 'minus');
+                    let obj = new FormData();
+                    obj.append('entry_id', item.entry_id);
+                    obj.append('qty', item?.quantity);
+                    dispatch(updateProductQuantityRequest(obj));
+                    // cartPlusMinusQuantity(item.id, 'plus');
                   }}
                   style={{
                     flex: 1,
@@ -1554,7 +1756,11 @@ const NewBill = props => {
                 </View>
                 <TouchableOpacity
                   onPress={() => {
-                    cartPlusMinusQuantity(item.id, 'plus');
+                    let obj = new FormData();
+                    obj.append('entry_id', item.entry_id);
+                    obj.append('qty', item?.quantity);
+                    dispatch(updateProductQuantityRequest(obj));
+                    // cartPlusMinusQuantity(item.id, 'plus');
                   }}
                   style={{
                     flex: 1,
@@ -1586,7 +1792,7 @@ const NewBill = props => {
                       fontSize: normalize(12),
                       fontFamily: Fonts.Poppins_Medium,
                     }}>
-                    {item.quantityType == 'piece' ? 'Pc' : item.quantityType}
+                    {item?.batch_no}
                   </Text>
                 </View>
               </View>
@@ -1600,8 +1806,9 @@ const NewBill = props => {
               }}>
               <TouchableOpacity
                 onPress={() => {
-                  let newArr = allCart.filter(i => i.id != item.id);
-                  setAllCart(newArr);
+                  let obj = new FormData();
+                  obj.append('entry_id', item?.entry_id);
+                  dispatch(deleteCartRequest(obj));
                 }}
                 style={{
                   height: normalize(20),
@@ -1629,6 +1836,7 @@ const NewBill = props => {
   const getTotalAmount = () => {
     try {
       let allArr = allCart;
+      console.log(allArr.length, '<<<<<<<<<<<<>>>>>>fdfdzf');
       let amount = 0;
       allArr.map((item, index) => {
         amount = amount + item.totalAmount;
@@ -2036,6 +2244,14 @@ const NewBill = props => {
   return (
     <SafeView backgroundColor={Colors.white}>
       <Loader visible={ProductReducer?.status === 'Product/addtoCartRequest'} />
+      <Loader
+        visible={
+          ProductReducer?.status === 'Product/updateProductQuantityRequest'
+        }
+      />
+      <Loader
+        visible={ProductReducer?.status === 'Product/deleteCartRequest'}
+      />
       {/* <View
         style={{
           height: normalize(36),
@@ -2161,18 +2377,20 @@ const NewBill = props => {
               justifyContent: 'space-around',
               paddingVertical: normalize(3),
             }}>
-            <Text
-              disabled
-              onPress={toggleAddCustomerModal}
-              style={{
-                color: '#34c85a',
-                fontSize: normalize(14),
-                fontFamily: Fonts.Poppins_SemiBold,
-                lineHeight: normalize(15),
-                opacity: 0.5,
-              }}>
-              +Add Customer
-            </Text>
+            <TouchableOpacity onPress={toggleAddCustomerModal}>
+              <Text
+                // disabled
+
+                style={{
+                  color: '#34c85a',
+                  fontSize: normalize(14),
+                  fontFamily: Fonts.Poppins_SemiBold,
+                  lineHeight: normalize(15),
+                  opacity: 0.5,
+                }}>
+                +Add Customer
+              </Text>
+            </TouchableOpacity>
             <Dropdown
               data={languageOptions}
               value={value}
@@ -2183,7 +2401,7 @@ const NewBill = props => {
               iconStyle={[styles.iconStyle, isFocus && {tintColor: '#001840'}]}
               labelField="label"
               valueField="value"
-              placeholder={'Select'}
+              placeholder={' choose payment'}
               onFocus={() => setIsFocus(true)}
               onBlur={() => setIsFocus(false)}
               onChange={item => {
@@ -2238,7 +2456,7 @@ const NewBill = props => {
               flex: 1,
             }}>
             <Pressable
-              onPress={toggleAddDiscountModal}
+              // onPress={toggleAddDiscountModal}
               style={{
                 flex: 1,
                 alignItems: 'center',
@@ -2263,7 +2481,7 @@ const NewBill = props => {
                 {/* {addtwozero(getTotalAmount())} */}
                 {/* {addtwozero(cashReturnAmount(cashCollected))} */}
               </Text>
-              <Text
+              {/* <Text
                 style={{
                   color: 'white',
 
@@ -2272,17 +2490,14 @@ const NewBill = props => {
                   // lineHeight: normalize(14),
                 }}>
                 +Tap to discount
-              </Text>
+              </Text> */}
             </Pressable>
           </LinearGradient>
         </View>
       </View>
 
       <View style={{flex: 1, paddingTop: normalize(20)}}>
-        <FlatList
-         data={[...allCart, ...ProductReducer.getCartDetailsRes[0]?.cartItems]}
-          renderItem={ItemCard}
-        />
+        <FlatList data={allCart} renderItem={ItemCard} />
         <View
           style={{
             height: normalize(60),
@@ -2293,7 +2508,7 @@ const NewBill = props => {
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-          <Pressable
+          {/* <Pressable
             onPress={toggleQuickAddModal}
             style={{
               height: normalize(40),
@@ -2313,9 +2528,9 @@ const NewBill = props => {
               }}>
               Quick add
             </Text>
-          </Pressable>
-          <Pressable
-            onPress={createBillOnPress}
+          </Pressable> */}
+          <TouchableOpacity
+            onPress={finalSale}
             style={{
               height: normalize(40),
               width: normalize(150),
@@ -2353,15 +2568,15 @@ const NewBill = props => {
                 paddingVertical: normalize(5),
               }}>
               <Image
-                source={Icons.back}
+                source={Icons.right}
                 style={{
-                  height: normalize(15),
-                  width: normalize(15),
+                  height: normalize(25),
+                  width: normalize(25),
                   tintColor: Colors.white,
                 }}
               />
             </View>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </View>
       <LinearGradient
@@ -2433,6 +2648,15 @@ const NewBill = props => {
       {isQuickAddModal && quickAddModal()}
       {isAddCustomerModal && addCustomerModal()}
       {isAddProductModal && RenderProductModal()}
+      <DateTimePickerModal
+        textColor={Colors.darkblue}
+        backdropStyleIOS={Colors.darkblue}
+        buttonTextColorIOS={Colors.darkblue}
+        isVisible={CalenderVisible}
+        mode="date"
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
+      />
     </SafeView>
   );
 };
@@ -2449,7 +2673,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   placeholderStyle: {
-    fontSize: normalize(12),
+    fontSize: normalize(11),
     fontFamily: Fonts.Poppins_Medium,
     color: Colors.placeholder,
   },

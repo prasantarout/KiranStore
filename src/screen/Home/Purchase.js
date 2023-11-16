@@ -9,6 +9,7 @@ import {
   Image,
   Button,
   FlatList,
+  BackHandler,
 } from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import SafeView from '../../components/SafeView';
@@ -157,7 +158,7 @@ const Purchase = props => {
             updatedVariants[productIndex].splice(variantIndex, 1);
             setVariants(updatedVariants);
             ProductReducer.getProductDetailsRes
-           dispatch(clearProductDetails(''));
+          //  dispatch(clearProductDetails(''));
           },
         },
       ],
@@ -302,6 +303,40 @@ const Purchase = props => {
   }, [ProductReducer?.getProductDetailsRes]);
  
   // end of dynamically render
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    return () => backHandler.remove();
+  }, []);
+
+  const handleBackPress = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to back this page without purchase?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {
+            console.log('Cancel Pressed');
+          },
+          style: 'cancel',
+        },
+        {
+          text: 'Back',
+          onPress: () => {
+            // Call the handleLogout function, and if successful, navigate back
+            
+              props?.navigation.goBack(); // Assuming you want to go back one screen
+            
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+
+    return true; // Indicates that the back press is handled
+  };
+
 
 //**************************his method used for change the variant filed value/user can manually chnage*******************************
 const handleChange = (text, productIndex, variantIndex, property) => {
@@ -334,7 +369,7 @@ const handleChange = (text, productIndex, variantIndex, property) => {
       return;
     }
 
-    for (let i = 0; i < variants.length; i++) {
+    for (let i = 0; i < variants?.length; i++) {
       const variantArray = variants[i]; // Access the inner array
       const variant = variantArray[0];
       console.log(variant, 'vanzxczxcx>..............');
@@ -408,7 +443,7 @@ const handleChange = (text, productIndex, variantIndex, property) => {
       showErrorAlert('User ID not found');
       return;
     }
-    if(variants.length===0){
+    if(variants[0]?.length===0 || variants?.length===0){
       showErrorAlert('Please add product on bills');
       return;
     }
@@ -450,6 +485,24 @@ const handleChange = (text, productIndex, variantIndex, property) => {
   };
 
 /**********************this function is for save purchase and this is final save for purchase**************************************/ 
+let status1 = '';
+if (status1 === '' || ProductReducer.status !== status1) {
+  switch (ProductReducer.status) {
+    case 'Product/createurchaseOrderRequest':
+      status1 = ProductReducer.status;
+      break;
+    case 'Product/createurchaseOrderSuccess':
+      status1 = ProductReducer.status;
+      // getCartDetails();
+      props?.navigation?.navigate('Home');
+      break;
+    case 'Product/createurchaseOrderFailure':
+      status1 = ProductReducer.status;
+    default:
+      break;
+  }
+}
+
 
 
   const AddSuppliers = async () => {

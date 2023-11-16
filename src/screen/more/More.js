@@ -19,15 +19,31 @@ import {Fonts, Icons} from '../../themes/ImagePath';
 import {Colors} from '../../themes/Colors';
 import Modal from 'react-native-modal';
 import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
+import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width} = Dimensions.get('window');
 const More = props => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isModalVisible1, setModalVisible1] = useState(false);
- 
+  const [mobile,setMobile]=useState('')
   // const toggleModal = () => {
   //   setModalVisible(!isModalVisible);
-  // };
+
+useEffect(()=>{
+async function getItem(){
+  var dataValue;
+  await AsyncStorage.getItem('number').then(value => {
+    if (value != null) {
+      const data = value;
+      dataValue = data;
+    }
+    console.log(dataValue,"smds")
+    setMobile(dataValue)
+  });
+}
+getItem();
+},[])
 
   const toggleModal1 = () => {
     setModalVisible1(!isModalVisible1);
@@ -126,7 +142,7 @@ const More = props => {
 
               {/* Details */}
               <View style={styles.detailsContainer}>
-                <Text style={styles.name}>+91-6370555963</Text>
+                <Text style={styles.name}>+91-{mobile}</Text>
                 <Text style={styles.email}>admin</Text>
                 <Text style={styles.email}>subscription expiry today</Text>
                 <Text style={styles.email}>Trial expiry today</Text>

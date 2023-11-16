@@ -41,6 +41,8 @@ import {
   deleteCartFailure,
   getSaleCartDetailsSuccess,
   getSaleCartDetailsFailure,
+  clearProductDetailsSuccess,
+  clearBarcodeDetailsSuccess,
 } from '../reducer/ProductReducer';
 import showErrorAlert from '../../utils/helpers/Toast';
 import {getApi, getApiWithParam, postApi} from '../../utils/helpers/ApiRequest';
@@ -254,7 +256,7 @@ export function* GetProductDetailsSaga(action) {
 
 
 export function* PurchaseOrderSaga(action) {
-  debugger;
+  // debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
@@ -269,6 +271,7 @@ export function* PurchaseOrderSaga(action) {
     console.log(response?.response[0], 'Purchasse>>>>>>>>>>>>>>>>>');
     if (response?.response[0]?.status == "Valid") {
       yield put(purchaseOrderSuccess(response?.data?.response[0]));
+      showErrorAlert(response?.response[0]?.message);
     } else {
       yield put(purchaseOrderFailure(response?.data));
       // showErrorAlert(response?.data?.message);
@@ -282,7 +285,7 @@ export function* PurchaseOrderSaga(action) {
 }
 
 export function* CreatePurchaseOrderSaga(action) {
-  debugger;
+  // debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
@@ -394,6 +397,7 @@ export function*  finalSaleSaga(action) {
     console.log(response?.response[0], '++++++++++++++++++addtocart');
     if (response?.response[0]?.status == "Valid") {
       yield put(finalSaleSuccess(response?.data?.response[0]));
+      showErrorAlert(response?.response[0]?.message);
     } else {
       yield put(finalSaleFailure(response?.data));
       // showErrorAlert(response?.data?.message);
@@ -413,7 +417,7 @@ export function* updateProductQuantitySaga(action) {
   try {
     let response = yield call(
       postApi,
-      'new_api/updatecartProductQty',
+      "new_api/updatecartProductQty",
       action?.payload,
       header,
     );
@@ -432,25 +436,28 @@ export function* updateProductQuantitySaga(action) {
 }
 
 export function* deletSaleCartSaga(action) {
+  // debugger;
   let header = {
     Accept: 'application/json',
     // contenttype: "application/json",
   };
-  try {
-    let response = yield call(
+  try{
+  let response = yield call(
       postApi,
-      'new_api/deletecartProduct',
-      action?.payload,
+      "new_api/deletecartProduct",
+      action.payload,
       header,
     );
-    console.log(response?.response[0], '++++++++++++++++++addtocart');
-    if (response?.response[0]?.status == "Valid") {
+    console.log(response?.response[0], '++++++++++++++++++deletecart');
+    if (response?.response[0]?.status == "valid") {
       yield put(deleteCartSuccess(response?.data?.response[0]));
+      showErrorAlert(response?.response[0]?.message);
     } else {
       yield put(deleteCartFailure(response?.data));
       // showErrorAlert(response?.data?.message);
     }
-  } catch (error) {
+  }
+   catch (error) {
     console.log(error);
      yield put(deleteCartFailure(response?.data))
     // showErrorAlert(error?.response?.data?.message);
@@ -481,6 +488,21 @@ export function*  getProductSaga(action) {
     console.log(error);
      yield put(getProductFailure(response?.data))
     // showErrorAlert(error?.response?.data?.message);
+  }
+}
+export function* clearProductDetailsSaga(action) {
+  try {
+    yield put(clearProductDetailsSuccess(action.payload));
+  } catch (error) {
+    console.log('clearProductDetailsSaga>>', error);
+  }
+}
+
+export function* clearBarcodeDetailsSaga(action) {
+  try {
+    yield put(clearBarcodeDetailsSuccess(action.payload));
+  } catch (error) {
+    console.log('clearProductDetailsSaga>>', error);
   }
 }
 
@@ -536,6 +558,18 @@ const watchFunction = [
   })(),
   (function* () {
     yield takeLatest("Product/getSaleCartDetailsRequest",GetCartDetailsSaga);
+  })(),
+  (function* () {
+    yield takeLatest(
+      'Product/clearProductDetailsRequest',
+      clearProductDetailsSaga,
+    );
+  })(),
+  (function* () {
+    yield takeLatest(
+      'Product/clearBarcodeDetailsRequest',
+      clearBarcodeDetailsSaga,
+    );
   })(),
 ];
 

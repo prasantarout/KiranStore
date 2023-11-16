@@ -16,15 +16,15 @@ import normalize from '../../utils/helpers/dimen';
 import MyStatusBar from '../../utils/helpers/MyStatusBar';
 import showErrorAlert from '../../utils/helpers/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDispatch,useSelector } from 'react-redux';
-import { otpverificationRequest } from '../../redux/reducer/AuthReducer';
-import Lodaer from '../../utils/helpers/Loader'
+import {useDispatch, useSelector} from 'react-redux';
+import {otpverificationRequest} from '../../redux/reducer/AuthReducer';
+import Lodaer from '../../utils/helpers/Loader';
 
 const OtpScreen = props => {
-  const {item} = props?.route.params;
-  const AuthReducer=useSelector((state)=>state.AuthReducer);
+  const {item, mobile} = props?.route.params;
+  const AuthReducer = useSelector(state => state.AuthReducer);
   console.log(item.token, 'fdvmlmlxz');
-  const dispatch=useDispatch();
+  const dispatch = useDispatch();
 
   const [otp, setOtp] = useState('');
 
@@ -38,27 +38,25 @@ const OtpScreen = props => {
       let obj = new FormData();
       obj.append('token', item);
       obj.append('otp', otp);
-      dispatch(otpverificationRequest(obj))
-      console.log(obj,"cnxc")
+      dispatch(otpverificationRequest(obj));
+      console.log(obj, 'cnxc');
     }
   };
 
-   
-  let status="";
-  if (status == "" || AuthReducer.status != status) {
+  let status = '';
+  if (status == '' || AuthReducer.status != status) {
     switch (AuthReducer.status) {
-      case "Auth/otpverificationRequest":
+      case 'Auth/otpverificationRequest':
         status = AuthReducer.status;
-        
+
         break;
-      case "Auth/otpverificationSuccess":
+      case 'Auth/otpverificationSuccess':
         status = AuthReducer.status;
-        props.navigation.navigate('NavigationScreen')
+        props.navigation.replace('NavigationScreen', {screen: 'Home'});
         // dispatch(productGetFromWishListRequest({ user_id }));
         break;
-      case "Auth/otpverificationFailure":
+      case 'Auth/otpverificationFailure':
         status = AuthReducer.status;
-        
         break;
     }
   }
@@ -66,7 +64,7 @@ const OtpScreen = props => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <MyStatusBar backgroundColor={Colors.darkblue} barStyle="light-content" />
-      <Lodaer visible={AuthReducer.status==="Auth/otpverificationRequest"}/>
+      <Lodaer visible={AuthReducer.status === 'Auth/otpverificationRequest'} />
       <View
         style={{
           height: '50%',
@@ -184,7 +182,7 @@ const OtpScreen = props => {
           alignItems: 'center',
           marginTop: normalize(30),
         }}>
-        <Text style={{color: 'white'}}>Otp is sent to +916374520412</Text>
+        <Text style={{color: 'white'}}>Otp is sent to +91{mobile}</Text>
       </View>
       <View
         style={{

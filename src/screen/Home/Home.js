@@ -13,7 +13,11 @@ import MyStatusBar from '../../utils/helpers/MyStatusBar';
 import {Colors} from '../../themes/Colors';
 import normalize from '../../utils/helpers/dimen';
 import {Icons} from '../../themes/ImagePath';
+import { useDispatch } from 'react-redux';
+import { clearBarcodeDetailsRequest, clearProductDetailsRequest } from '../../redux/reducer/ProductReducer';
 const Home = (props) => {
+  const dispatch=useDispatch()
+
   let item = [
     {
       id: 1,
@@ -82,7 +86,7 @@ const Home = (props) => {
         props.navigation.navigate('MyOrders')
       }
      }}
-      
+  
       >
       <Image
         source={item.icon}
@@ -275,7 +279,9 @@ const Home = (props) => {
               width:'40%',
               borderWidth: 1,
             }}
-            onPress={()=>props.navigation.navigate('AddPRoductToMyShop')}
+            onPress={()=>{
+              dispatch(clearBarcodeDetailsRequest({}));
+              props.navigation.navigate('AddPRoductToMyShop')}}
             >
             <Text
               style={{
@@ -299,7 +305,10 @@ const Home = (props) => {
               // paddingHorizontal: normalize(10),
               borderWidth: 1,
             }}
-            onPress={()=>props.navigation.navigate('Purchase',{purchaseFlag:15145})}
+            onPress={() => {
+              dispatch(clearProductDetailsRequest([]));
+              props.navigation.navigate('Purchase', {purchaseFlag: 15145});
+            }}
             >
             <Text
               style={{

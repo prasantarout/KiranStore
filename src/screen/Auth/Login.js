@@ -34,6 +34,8 @@ const Login = (props) => {
     }else if(number.length!==10){
       showErrorAlert('Number must be 10 digits')
     }else{  
+    
+      AsyncStorage.setItem('number', number)
     // let url="https://bhanumart.com/dev/new_api/login-with-otp";
     let obj  = new FormData();
     obj.append("mobile", number);
@@ -50,7 +52,7 @@ const Login = (props) => {
         break;
       case "Auth/signupSuccess":
         status = AuthReducer.status;
-        props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token})
+        props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token,mobile:number})
         // dispatch(productGetFromWishListRequest({ user_id }));
         break;
       case "Auth/signupFailure":

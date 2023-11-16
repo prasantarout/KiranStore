@@ -855,7 +855,9 @@ const ProductManually = props => {
                         <View style={styles.container_section1}>
                           <View style={styles.inputContainers}>
                             {/* Left Icon */}
-                            <TouchableOpacity onPress={()=>props?.navigation?.navigate('Barcode',{flag:1})}>
+                            <TouchableOpacity onPress={()=>{
+                              dispatch(clearBarcodeDetailsRequest({}));
+                              props?.navigation?.navigate('Barcode',{flag:1})}}>
                               <Image source={Icons.qr} style={styles.icon} />
                             </TouchableOpacity>
 

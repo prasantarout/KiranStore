@@ -296,9 +296,17 @@ const ProductSlice = createSlice({
     state.status = action.type;
    },
 
-   clearProductDetails(state, action) {
-    state.status = action.type;
-   },
+
+   clearBarcodeDetailsRequest(state,action){},
+   clearBarcodeDetailsSuccess(state,action){
+    state.getProductByBarcodeRes = action.payload;
+  },
+
+  // clear getProductDetailsRes
+  clearProductDetailsRequest(state, action) {},
+  clearProductDetailsSuccess(state, action) {
+    state.getProductDetailsRes = action.payload;
+  },
   },
 });
 
@@ -377,7 +385,13 @@ export const {
   updateProductQuantitySuccess,
   updateProductQuantityFailure,
 
-  getPurchaseProductRequest
+  clearProductDetailsRequest,
+  clearProductDetailsSuccess,
+
+  getPurchaseProductRequest,
+
+  clearBarcodeDetailsRequest,
+  clearBarcodeDetailsSuccess
 } = ProductSlice.actions;
 
 export default ProductSlice.reducer;
