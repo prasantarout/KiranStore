@@ -29,11 +29,13 @@ import {ActivityIndicator} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductReducer, {
   clearBarcodeDetails,
+  clearBarcodeDetailsRequest,
   getProductByBarcodeRequest,
   getProductByBarcodeSuccess,
 } from '../../redux/reducer/ProductReducer';
 import {useDispatch, useSelector} from 'react-redux';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import axios from 'axios';
 
 const Barcode = props => {
   const [cameraPermission, setCameraPermission] = useState();
@@ -43,14 +45,10 @@ const Barcode = props => {
   const barcodeScanned = useSharedValue(false);
   const [data, setData] = useState('');
   const detectorResult = useSharedValue('');
-  const [barcodeScanning, setBarcodeScanning] = useState(false);
   let devices = useCameraDevices('wide-angle-camera');
   const ProductReducer = useSelector(state => state.ProductReducer);
-
-  console.log(ProductReducer?.getProductByBarcodeRes?.length, 'fsfncxbc');
   const dispatch = useDispatch();
   const {flag} = props?.route?.params ? props?.route?.params : '';
-  console.log(flag, 'SDKSDN');
   let device = devices.back;
   const isFocus = useIsFocused();
 
@@ -58,7 +56,11 @@ const Barcode = props => {
     (async () => {
       const cameraPermissionStatus = await Camera.requestCameraPermission();
       setCameraPermission(cameraPermissionStatus);
+      console.log('1 call');
     })();
+    return () => {
+      console.log('unmount');
+    };
   }, []);
 
   const offset = useSharedValue(100);
@@ -68,10 +70,14 @@ const Barcode = props => {
 
   React.useEffect(() => {
     offset.value = withRepeat(
-      withTiming(-offset.value - 25, {duration: 1500}),
+      withTiming(-offset.value - 25, {duration: 500}),
       -1,
       true,
     );
+    return () => {
+      console.log('unmount2');
+      offset.value = 100;
+    };
   }, []);
 
   const frameProcessor = useFrameProcessor(
@@ -83,7 +89,7 @@ const Barcode = props => {
         .join('');
 
       if (barcodesStr) {
-        setCameraLoader(true);
+        // setCameraLoader(true);
         REA.runOnJS(setCameraLoader)(true);
         REA.runOnJS(setDummy)(false);
         REA.runOnJS(setData)(barcodesStr);
@@ -91,26 +97,10 @@ const Barcode = props => {
 
         // Handle the barcode data as needed
         console.log('Scanned Barcode:', barcodesStr);
-        //   props.navigation.navigate('AddPRoductToMyShop', { barcodeData: barcodesStr });
       }
     },
     [isFocus],
   );
-
-  const refreshScreen = () => {
-    // Put the logic you want to execute when the screen is focused here
-    // For example, clear any state or reset data
-    setCameraLoader(false);
-    setData('');
-    setDummy(true);
-    // barcodeScanned.value = false;
-  };
-
-  // useFocusEffect(() => {
-  //   if(flag===1){
-  //     refreshScreen();
-  //   }
-  // });
 
   useEffect(() => {
     if (!dummy) {
@@ -118,69 +108,102 @@ const Barcode = props => {
         navigatewithData(data);
       }, 2000);
     }
+    return () => {
+      // frameProcessor.cancel();
+      setDummy(false);
+      setCameraLoader(false);
+      console.log('unmount 3');
+    };
   }, [dummy, data]);
 
   const navigatewithData = async code => {
-    var dataValue;
-    await AsyncStorage.getItem('user_id').then(value => {
-      if (value != null) {
-        dataValue = value;
+    try {
+      var dataValue;
+      await AsyncStorage.getItem('user_id').then(value => {
+        if (value != null) {
+          dataValue = value;
+        }
+      });
+      let obj = new FormData();
+      obj.append('barcode', code);
+      obj.append('user_id', dataValue);
+      // console.log(obj,"obj>>>>>>>>>>>>>>>>.")
+      let apiUrl = 'https://bhanumart.com/dev/new_api/get-product-by-barcode';
+      const response = await axios.post(apiUrl, obj);
+      // console.log(response)
+      if (response.data?.response[0]?.status === 'Valid') {
+        if (flag === 1) {
+          props?.navigation?.navigate('ProductManually', {item: data});
+        } else if (flag === 2) {
+          props?.navigation?.navigate('TabStack1', {
+            screen: 'AllStock',
+            params: {
+              item: data,
+            },
+          });
+        } else {
+          props?.navigation?.navigate('AddPRoductToMyShop', {
+            productDetail: response?.data,
+            barcode: data,
+          });
+        }
+        // props?.navigation.navigate('AddPRoductToMyShop',{productDetail:response?.data,barcode:data})
+      } else {
+        console.log('API response does not have expected data:', response.data);
       }
-    });
-    let obj = new FormData();
-    obj.append('barcode', code);
-    obj.append('user_id', dataValue);
-    dispatch(getProductByBarcodeRequest(obj));
-    // setCameraLoader(true);
-    console.log(obj, 'csjkcznxcn');
-  };
-
-  let status = '';
-
-  useEffect(() => {
-    let isMounted = true;
-
-    if (status === '' || ProductReducer.status !== status) {
-      switch (ProductReducer.status) {
-        case 'Product/getProductByBarcodeRequest':
-          status = ProductReducer.status;
-          break;
-
-        case 'Product/getProductByBarcodeSuccess':
-          status = ProductReducer.status;
-
-          if (flag === 1) {
-            props?.navigation?.navigate('ProductManually', {item: data});
-          } else if (flag === 2) {
-            props?.navigation?.navigate('TabStack1', {
-              screen: 'AllStock',
-              params: {
-                item: data,
-              },
-            });
-          } else {
-            props?.navigation?.replace('AddPRoductToMyShop', {item: data});
-          }
-
-          // dispatch(clearBarcodeDetails())
-          // dispatch(getProductByBarcodeSuccess(''));
-          break;
-
-        case 'Product/getProductByBarcodeFailure':
-          status = ProductReducer.status;
-          break;
-
-        default:
-          break;
+    } catch (error) {
+      // Handle API request error
+      console.error('API call error:', error);
+      if (error.response) {
+        console.error(
+          'Server responded with non-2xx status:',
+          error.response.status,
+        );
+        console.error('Response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Request setup error:', error.message);
       }
     }
+  };
 
-    return () => {
-      isMounted = false; // Cleanup function: Set isMounted to false when unmounted
-    };
-  }, [ProductReducer, flag, data]);
+  // let status = '';
+  // if (status === '' || ProductReducer.status !== status) {
+  //     switch (ProductReducer.status) {
+  //       case 'Product/getProductByBarcodeRequest':
+  //         status = ProductReducer.status;
+  //         break;
 
-  // }, [ProductReducer]);
+  //       case 'Product/getProductByBarcodeSuccess':
+  //         status = ProductReducer.status;
+
+  //         if (flag === 1) {
+  //           props?.navigation?.navigate('ProductManually', {item: data});
+  //         } else if (flag === 2) {
+  //           props?.navigation?.navigate('TabStack1', {
+  //             screen: 'AllStock',
+  //             params: {
+  //               item: data,
+  //             },
+  //           });
+  //         } else {
+  //           props?.navigation?.navigate('AddPRoductToMyShop', {item: data});
+  //         }
+  //         // setCameraLoader(false)
+  //         // dispatch(clearBarcodeDetails())
+  //         // dispatch(clearBarcodeDetailsRequest([]));
+  //         // dispatch(getProductByBarcodeSuccess(''));
+  //         break;
+
+  //       case 'Product/getProductByBarcodeFailure':
+  //         status = ProductReducer.status;
+  //         break;
+
+  //       default:
+  //         break;
+  //     }
+  //   }
 
   useFocusEffect(
     React.useCallback(() => {
@@ -188,6 +211,7 @@ const Barcode = props => {
       setCameraLoader(false);
       setData('');
       setDummy(true);
+      dispatch(clearBarcodeDetailsRequest([]));
       // barcodeScanned.value = false;
     }, []),
   );
@@ -285,7 +309,7 @@ const styles = StyleSheet.create({
   },
   square: {
     width: '100%',
-    height: 10,
+    height: 5,
     backgroundColor: 'red',
   },
   saveArea: {

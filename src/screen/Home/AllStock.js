@@ -9,6 +9,7 @@ import {
   TextInput,
   Image,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import SafeView from '../../components/SafeView';
 import {Colors} from '../../themes/Colors';
@@ -21,14 +22,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '../../utils/helpers/Loader';
 const AllStock = props => {
   const flag = props?.route.params?.flag;
-  console.log(flag,">>>>>>>>>>>>>>>>>>>>>>>>hello")
-  const [start, setStart] = useState(0);
+  console.log(flag, '>>>>>>>>>>>>>>>>>>>>>>>>hello');
   const [limit, setLimit] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [dataSource, setDataSource] = useState([]);
+  const [offset, setOffset] = useState(1);
+  const [isListEnd, setIsListEnd] = useState(false);
 
   const isFocus = useIsFocused();
   const dispatch = useDispatch();
@@ -39,43 +42,66 @@ const AllStock = props => {
     '====================================',
   );
 
- 
-    const handleGetProduct = async () => {
+  const handleGetProduct = async () => {
     try {
+      setLoading(true);
+
       const user_id = await AsyncStorage.getItem('user_id');
       if (user_id !== null) {
         let obj = new FormData();
         obj?.append('user_id', user_id);
-        obj?.append('start', currentPage);
+        obj?.append('start', offset);
         obj?.append('limit', limit);
-        console.log(obj,",,,,,,,,,,,,,,,")
-        // return
+
         dispatch(getProductRequest(obj));
-       
-        // Dispatch your Redux action here
       } else {
         showErrorAlert('User ID not found. Please log in.');
+        setLoading(false); // Hide loader on error
       }
     } catch (error) {
       showErrorAlert('An error occurred while searching for the product.');
       console.error(error);
+      setLoading(false); // Hide loader on error
     }
   };
-  
+
   useEffect(() => {
-    setCurrentPage(1);
     handleGetProduct();
-  }, [isFocus, searchQuery]);
- 
+  }, [isFocus, searchQuery, offset]);
 
-  const loadMoreProducts = () => {
-    if (!loading && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-      handleGetProduct();
+  useEffect(() => {
+    if (
+      ProductReducer?.getProductRes &&
+      Array.isArray(ProductReducer.getProductRes)
+    ) {
+      setTotalPages(Math.ceil(ProductReducer.getProductRes.length / limit));
+      setDataSource(prevData => [
+        ...prevData,
+        ...ProductReducer?.getProductRes,
+      ]);
+      setLoading(false); // Hide loader when data is fetched
+    } else {
+      // Handle the case when getProductRes is not an array or is undefined
+      setLoading(false); // Hide loader in case of an error or empty data
     }
-  } 
+  }, [ProductReducer?.getProductRes]);
 
-  let status='';
+  const getData = () => {
+    if (!loading && !isListEnd) {
+      setOffset(offset + 1);
+      setLoading(false);
+    }
+  };
+
+  // console.log(ProductReducer?.getProductRes,"cnscxncnx")
+  // useEffect(() => {
+  //   if (ProductReducer?.getProductRes) {
+  //     setTotalPages(Math.ceil(ProductReducer.getProductRes.length / limit));
+  //     setAllProducts((prevProducts) => [...prevProducts, ...ProductReducer.getProductRes]);
+  //   }
+  // }, [ProductReducer?.getProductRes]);
+
+  let status = '';
   if (status === '' || ProductReducer.status !== status) {
     switch (ProductReducer.status) {
       case 'Product/getProductByBarcodeRequest':
@@ -84,7 +110,10 @@ const AllStock = props => {
 
       case 'Product/getProductByBarcodeSuccess':
         status = ProductReducer.status;
-        console.log(ProductReducer?.getProductByBarcodeRes,"+++++++++++++++++++++++")
+        console.log(
+          ProductReducer?.getProductByBarcodeRes,
+          '+++++++++++++++++++++++',
+        );
         // dispatch(getProductByBarcodeSuccess(''));
         break;
       case 'Product/getProductByBarcodeFailure':
@@ -95,11 +124,21 @@ const AllStock = props => {
     }
   }
 
-
-
+  const renderFooter = () => {
+    return (
+      // Footer View with Loader
+      <View style={styles.footer}>
+        {loading && <ActivityIndicator color="black" style={{margin: 15}} />}
+      </View>
+    );
+  };
 
   const renderProductItem = ({item}) => {
-    console.log(item, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    console.log(item.image, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    const lastIndex = item?.image?.lastIndexOf('/');
+    const urlPath = item?.image?.substring(0, lastIndex + 1); // URL path
+    const fileName = item?.image?.substring(lastIndex + 1);
+    console.log(urlPath+fileName, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>image');
     let matchingProductFound = false;
     if (
       searchQuery.length > 0 &&
@@ -112,29 +151,33 @@ const AllStock = props => {
       return (
         <TouchableOpacity
           onPress={() => {
-            if(!flag==1){
-            props?.navigation.navigate('Purchase', {product: item});
-          }
+            if (!flag == 1) {
+              props?.navigation.navigate('Purchase', {product: item});
+            }
           }}
           underlayColor={Colors.lightGray} // Change the color when pressed
           style={styles.productCard}>
           <View style={styles.productCardContainer}>
             <Image
-              source={item.image ? {uri: item.image} : Icons.gift}
+              source={{ uri: urlPath + fileName }}
               style={styles.productImage}
             />
             <View style={styles.productCardContent}>
               <Text style={styles.productName}>{item.product_name}</Text>
               {/* <Text>Batch No: {item.batch_no}</Text> */}
               <View style={{flexDirection: 'row'}}>
-                <Text>Mrp:{item.mrp}</Text>
-                <Text>{'|'}</Text>
-                <Text>Purchase Price:{item.purchase_price}</Text>
+                <Text style={{color: '#000000'}}>Mrp:{item.mrp}</Text>
+                <Text style={{color: '#000000'}}>{'|'}</Text>
+                <Text style={{color: '#000000'}}>
+                  Purchase Price:{item.purchase_price}
+                </Text>
               </View>
               {/* <Text>Mobile Sale Price: {item.mobile_sale_price}</Text> */}
               {/* <Text>Unit Store Price: {item.unit_store_price}</Text> */}
               {/* <Text>Wholesale Sale Price:{item.wholesale_sale_price}</Text> */}
-              <Text>avaliable_stock:{item.avaliable_stock}</Text>
+              <Text style={{color: '#000000'}}>
+                Avaliable Stock:{item.avaliable_stock}
+              </Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -157,6 +200,7 @@ const AllStock = props => {
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.textInput}
+                placeholderTextColor={'#000000'}
                 placeholder="Search"
                 value={searchQuery}
                 onChangeText={text => setSearchQuery(text)}
@@ -165,7 +209,7 @@ const AllStock = props => {
                 style={styles.qrIcon}
                 onPress={() => {
                   // Handle QR code icon press here
-                  props.navigation.navigate('Barcode1',{flag:2});
+                  props.navigation.navigate('Barcode1', {flag: 2});
                 }}>
                 <Image source={Icons.qr} style={styles.qrImage} />
               </TouchableOpacity>
@@ -173,15 +217,13 @@ const AllStock = props => {
           </View>
         </ScrollView>
         <FlatList
-          data={ProductReducer?.getProductRes} // Use your product data from Redux here
+          data={dataSource?.length > 0 ? dataSource : []} // Use your product data from Redux here
           renderItem={renderProductItem}
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={{marginTop: 20, paddingBottom: normalize(120)}}
-          onEndReached={loadMoreProducts}
+          onEndReached={getData}
           onEndReachedThreshold={0.1}
-          ListFooterComponent={() =>
-            loading && <ActivityIndicator size="large" color="black" />
-          }
+          // ListFooterComponent={renderFooter}
           ListEmptyComponent={() => (
             <View style={styles.noProductContainer}>
               <Text style={styles.noProductText}>No products found</Text>
@@ -222,6 +264,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     paddingLeft: normalize(30),
+    color: '#000000',
   },
   qrIcon: {
     position: 'absolute',
@@ -273,6 +316,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontWeight: 'bold',
+    color: '#000000',
   },
   noProductContainer: {
     flex: 1,

@@ -86,7 +86,6 @@ const Home = (props) => {
         props.navigation.navigate('MyOrders')
       }
      }}
-  
       >
       <Image
         source={item.icon}
@@ -94,9 +93,8 @@ const Home = (props) => {
       />
       <Text
         style={{
-          color: Colors.black2,
+          color:'#000000',
           fontSize: normalize(12),
-          
           textAlign: 'center',
           marginTop: normalize(5),
           
@@ -149,7 +147,7 @@ const Home = (props) => {
                   <Image source={item.icon} style={styles.icon} />
                   <Text
                     style={{
-                      marginRight: item?.id === 1 ? normalize(10) : null,
+                      marginRight: item?.id === 1 ? normalize(10) : null,color:'#000000'
                     }}>
                     {item?.title}
                   </Text>
@@ -280,7 +278,7 @@ const Home = (props) => {
               borderWidth: 1,
             }}
             onPress={()=>{
-              dispatch(clearBarcodeDetailsRequest({}));
+              dispatch(clearBarcodeDetailsRequest([]));
               props.navigation.navigate('AddPRoductToMyShop')}}
             >
             <Text

@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: normalize(10),
     maxWidth: normalize(230),
+    color:'#000000'
   },
   subItem: {
     // marginHorizontal:normalize(30),

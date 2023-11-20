@@ -258,6 +258,7 @@ const styles = StyleSheet.create({
     fontSize:normalize(20), // 4% of screen width
     fontWeight: '700',
     fontFamily:Fonts.Poppins_Black,
+    color:'#000000'
   },
   subtitle: {
     fontSize:normalize(14), // 3.5% of screen width
@@ -265,6 +266,7 @@ const styles = StyleSheet.create({
     lineHeight:20,
     tetxAlign:'center',
     marginTop:normalize(10),
-    letterSpacing:0.5
+    letterSpacing:0.5,
+    color:'#000000'
   },
 });

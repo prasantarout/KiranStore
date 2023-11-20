@@ -475,7 +475,7 @@ const NewBill = props => {
         showErrorAlert('Please enter Price');
         return;
       }
-      if (priceByQuantity.includes('-') && priceByQuantity.includes(',')) {
+      if (priceByQuantity.includes('-') && priceByQuantity?.includes(',')) {
         showErrorAlert('enter a numeric Price');
         return;
       }

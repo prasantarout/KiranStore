@@ -26,6 +26,7 @@ import {
   ProductDetailsRequest,
   TaxSlotRequest,
   TaxSlotaddRequest,
+  clearBarcodeDetailsRequest,
 } from '../../redux/reducer/ProductReducer';
 import showErrorAlert from '../../utils/helpers/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -45,12 +46,18 @@ const ProductManually = props => {
 
   const dispatch = useDispatch();
 
-  const item=props?.route.params ?props?.route?.params:'';
-  console.log(item,"sadhskd??????????????")
+  const item = props?.route.params ? props?.route?.params : '';
+  const productData = props?.route?.params ? props?.route?.params : '';
+  console.log(productData?.product,">>>>>>>>>>product")
+  const lastIndex =productData?.product ? productData?.product?.image?.lastIndexOf('/'):'';
+  const urlPath =
+  productData?.product ? productData?.product?.image?.substring(0, lastIndex + 1)
+      : ''; // URL path
+  const fileName =
+  productData?.product ? productData?.product?.image?.substring(lastIndex + 1)
+      : '';
 
-  const quantities = ['1', '2', '3', '4', '5'];
   const quantities1 = ['Yes', 'No'];
-
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
@@ -70,7 +77,6 @@ const ProductManually = props => {
     setVariants(updatedVariants);
     setModalVisible2(false); // Close the modal after selection
   };
-
 
   const toggleAccordion = () => {
     setAccordionOpen(!isAccordionOpen);
@@ -186,16 +192,18 @@ const ProductManually = props => {
     dispatch(TaxSlotRequest());
   }, []);
   const ProductReducer = useSelector(state => state.ProductReducer);
-  console.log(ProductReducer?.TaxSlotaddRes?.product_id, 'ffnxnc');
+  // console.log(ProductReducer?.TaxSlotaddRes?.product_id, 'ffnxnc');s
 
-  const [product, setProduct] = useState('');
+  const [product, setProduct] = useState(
+    productData?.product ? productData?.product?.product_name
+      : '',
+  );
 
   const [generatedBarcodes, setGeneratedBarcodes] = useState([]);
   const [selectedBarcode, setSelectedBarcode] = useState('');
   const [CalenderVisible, setCalenderVisible] = useState(false);
   const [CalenderVisible1, setCalenderVisible1] = useState(false);
   const [numVariants, setNumVariants] = useState(1);
-  
 
   const hideDatePicker = () => {
     setCalenderVisible(false);
@@ -471,14 +479,24 @@ const ProductManually = props => {
 
   const handleChange = (text, index, field) => {
     const updatedVariants = [...variants];
+    if (!updatedVariants[index]) {
+      updatedVariants[index] = {};
+    }
     updatedVariants[index][field] = text;
+    if (field === 'store_price') {
+      updatedVariants[index]['mobile_price'] = text;
+      updatedVariants[index]['wholesale_price'] = text;
+    }
+
     setVariants(updatedVariants);
   };
 
   const maxBarcodeCount = 5;
   const generateBarcode = () => {
     if (generatedBarcodes.length < maxBarcodeCount) {
-      const randomBarcode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+      const randomBarcode = Math.floor(
+        100000000000 + Math.random() * 900000000000,
+      ).toString();
       return randomBarcode;
     } else {
       showErrorAlert('Maximum you have generated 5 barcode numbers at a time');
@@ -505,28 +523,40 @@ const ProductManually = props => {
     {
       variantName: '',
       quantity: '',
-      barcodenumber:item ? item.item : '', // Initialize with an empty barcode
-      mrp: '',
-      batch_no: '',
-      purchase: '',
+      barcodenumber: item
+        ? item.item
+        : productData?.product ? productData?.product?.barcode
+        : '', // Initialize with an empty barcode
+      mrp:
+      productData?.product ? productData?.product?.mrp
+          : '',
+      batch_no:
+      productData?.product ? productData?.product?.batch_no
+          : '',
+      purchase:
+      productData?.product ? productData?.product?.purchase_price
+          : '',
       expiryDate: '',
       expiryDateAlert: '',
       // selectedQuantity1: '',
-      mobile_price: '',
+      mobile_price:
+      productData?.product ? productData?.product?.mobile_sale_price
+          : '',
       store_price: '',
-      wholesale_price: '',
+      wholesale_price:
+      productData?.product ? productData?.product?.wholesale_sale_price
+          : '',
       inclusiveGst: 'Yes',
     },
   ]);
 
   const handleAddVariant = () => {
-    
     setVariants(prevVariants => [
       ...prevVariants,
       {
         variantName: '',
         quantity: '',
-        barcodenumber:'', // Initialize with an empty barcode
+        barcodenumber: '', // Initialize with an empty barcode
         mrp: '',
         batch_no: '',
         purchase: '',
@@ -539,7 +569,6 @@ const ProductManually = props => {
         inclusiveGst: 'Yes',
       },
     ]);
-    // Check if any of the variant properties are non-empty
     const hasNonEmptyVariant = variants.some(
       variant =>
         variant.variantName ||
@@ -553,19 +582,35 @@ const ProductManually = props => {
         variant.selectedQuantity1 ||
         variant.mobile_price ||
         variant.store_price ||
-        variant.wholesale_price
+        variant.wholesale_price,
     );
-  
+
     if (hasNonEmptyVariant) {
-     
       AddProductDetails();
     }
   };
-  
 
+  const resetVariantFields = () => {
+    setProduct('');
+    setSelectedQuantity(null);
+    const resetVariants = variants.map(variant => ({
+      ...variant,
+      variantName: '',
+      quantity: '',
+      barcodenumber: '',
+      mrp: '',
+      purchase: '',
+      batch_no: '',
+      expiryDate: '',
+      expiryDateAlert: '',
+      inclusiveGst: '',
+      mobile_price: '',
+      store_price: '',
+      wholesale_price: '',
+    }));
 
-
-  
+    setVariants(resetVariants);
+  };
 
   const AddProductDetails = async () => {
     // debugger;
@@ -575,79 +620,67 @@ const ProductManually = props => {
         dataValue = value;
       }
     });
-      for (const variant of variants) {
-      if (
-        !variant.variantName ||
-        !variant.quantity ||
-        !variant.barcodenumber ||
-        !variant.mrp ||
-        !variant.purchase ||
-        !variant.batch_no ||
-        !variant.expiryDate ||
-        !variant.expiryDateAlert ||
-        !variant.inclusiveGst ||
-        !variant.mobile_price ||
-        !variant.store_price ||
-        !variant.wholesale_price
-      ) {
-        showErrorAlert('All fields are required for the variant');
+    for (const variant of variants) {
+      if (product === '') {
+        showErrorAlert('Product name is required');
         return;
-      }
-      let obj = new FormData();
-      obj.append('user_id', dataValue);
-      obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
-      obj.append('tax_slot',selectedQuantityId)
-      obj.append('size', variant.variantName);
-      obj.append('quantity', variant.quantity);
-      obj.append('barcode', variant.barcodenumber);
-      obj.append('mrp', variant.mrp);
-      obj.append('purchase_price', variant.purchase);
-      obj.append('batch_no', variant.batch_no);
-      obj.append('exp_date', variant.expiryDate);
-      obj.append('exp_date_alert', variant.expiryDateAlert);
-      obj.append('inclusive_gst', variant.inclusiveGst);
-      obj.append('mobile_price', variant.mobile_price);
-      obj.append('store_price', variant.store_price);
-      obj.append('wholesale_price', variant.wholesale_price);
-
-      try {
-        await connectionrequest();
-        dispatch(ProductDetailsRequest(obj));
-      } catch (err) {
-        showErrorAlert('Please connect to the Internet');
+      } else if (!variant.variantName) {
+        showErrorAlert('Variant name is required');
+      } else if (!variant?.quantity) {
+        showErrorAlert('Quantity is required');
+      } else if (!variant.mrp) {
+        showErrorAlert('MRP is required');
+      } else {
+        let obj = new FormData();
+        obj.append('user_id', dataValue);
+        obj.append('product_id', ProductReducer?.TaxSlotaddRes?.product_id);
+        obj.append('tax_slot', selectedQuantityId);
+        obj.append('size', variant.variantName);
+        obj.append('quantity', variant.quantity);
+        obj.append('barcode', variant.barcodenumber);
+        obj.append('mrp', variant.mrp);
+        obj.append('purchase_price', variant.purchase);
+        obj.append('batch_no', variant.batch_no);
+        obj.append('exp_date', variant.expiryDate);
+        obj.append('exp_date_alert', variant.expiryDateAlert);
+        obj.append('inclusive_gst', variant.inclusiveGst);
+        obj.append('mobile_price', variant.mobile_price);
+        obj.append('store_price', variant.store_price);
+        obj.append('wholesale_price', variant.wholesale_price);
+        try {
+          await connectionrequest();
+          dispatch(ProductDetailsRequest(obj));
+        } catch (err) {
+          showErrorAlert('Please connect to the Internet');
+        }
       }
     }
   };
 
-  
-  async function validateField(){
+  async function validateField() {
+    let currentIndex = 0;
     for (const variant of variants) {
-      if(product===""){
-        showErrorAlert('All fields are required for the variant');
+      if (currentIndex === 0) {
+        if (product === '') {
+          showErrorAlert('Product name is required');
+          return;
+        }
+      }
+
+      if (!variant.variantName) {
+        showErrorAlert('Variant name is required');
         return;
-      }else 
-      if (
-        !variant.variantName ||
-        !variant.quantity ||
-        !variant.barcodenumber ||
-        !variant.mrp ||
-        !variant.purchase ||
-        !variant.batch_no ||
-        !variant.expiryDate ||
-        !variant.expiryDateAlert ||
-        !variant.inclusiveGst ||
-        !variant.mobile_price ||
-        !variant.store_price ||
-        !variant.wholesale_price
-      ) {
-        // showErrorAlert('All fields are required for the variant');
+      } else if (!variant?.quantity) {
+        showErrorAlert('Quantity is required');
+        return;
+      } else if (!variant.mrp) {
+        showErrorAlert('MRP is required');
         return;
       }
-     
-        //  connectionrequest();
-      //  AddProductDetails();
-      props?.navigation?.navigate('TabStack1')
-     
+      currentIndex++;
+    }
+    if (currentIndex === variants.length) {
+      AddProductDetails();
     }
   }
 
@@ -672,8 +705,10 @@ const ProductManually = props => {
             }}>
             {/* Left Image */}
             <Image
-              source={Icons.gift} // Replace with your image source
+              source={urlPath + fileName ? {uri: urlPath + fileName}:Icons.gift} // Replace with your image source
               style={styles.image}
+              resizeMode='contain'
+              // tintColor="red"
             />
 
             {/* Right Content */}
@@ -683,6 +718,7 @@ const ProductManually = props => {
                 <TextInput
                   style={styles.textInput}
                   placeholder="Enter product name"
+                  placeholderTextColor={Colors.placeholder}
                   value={product}
                   onChangeText={val => setProduct(val)}
                 />
@@ -690,12 +726,12 @@ const ProductManually = props => {
 
               {/* Custom Dropdown Section */}
               <View style={styles.dropdownSection}>
-                <Text style={styles.label}>Quantity:</Text>
-                <Text>{selectedQuantity && selectedQuantity?.slice(4)}</Text>
+                <Text style={styles.label}>Tax Slot:</Text>
+                <Text style={{color:'#000000'}}>{selectedQuantity && selectedQuantity?.slice(4)}</Text>
                 <TouchableOpacity
                   style={styles.dropdownButton}
                   onPress={toggleModal}>
-                  <Text style={styles.dropdownButtonText}>
+                  <Text style={[styles.dropdownButtonText1]}>
                     {selectedQuantity || 'Tax Slot'}
                   </Text>
                   <Image
@@ -855,9 +891,13 @@ const ProductManually = props => {
                         <View style={styles.container_section1}>
                           <View style={styles.inputContainers}>
                             {/* Left Icon */}
-                            <TouchableOpacity onPress={()=>{
-                              dispatch(clearBarcodeDetailsRequest({}));
-                              props?.navigation?.navigate('Barcode',{flag:1})}}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                dispatch(clearBarcodeDetailsRequest([]));
+                                props?.navigation?.navigate('Barcode', {
+                                  flag: 1,
+                                });
+                              }}>
                               <Image source={Icons.qr} style={styles.icon} />
                             </TouchableOpacity>
 
@@ -865,6 +905,7 @@ const ProductManually = props => {
                             <TextInput
                               style={styles.textInputs}
                               placeholder="Enter Barcode Number"
+                              placeholderTextColor={'#000000'}
                               // value={userInputBarcode}
                               // onChangeText={text => setUserInputBarcode(text)}
 
@@ -911,7 +952,7 @@ const ProductManually = props => {
                                       'barcodenumber',
                                     );
                                   }}>
-                                  <Text numberOfLines={1}>{barcode}</Text>
+                                  <Text numberOfLines={1} style={{color:Colors.placeholder}}>{barcode}</Text>
                                 </TouchableOpacity>
                               ) : null,
                             )}
@@ -927,7 +968,7 @@ const ProductManually = props => {
                               alignSelf: 'flex-end',
                             }}
                             onPress={() => handleGenerateRandomBarcode(index)}>
-                            <Text>Auto generated barcode</Text>
+                            <Text style={{color:Colors.white}}>Auto generated barcode</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -1093,7 +1134,7 @@ const ProductManually = props => {
                         </Text>
                         <TextInputItem
                           viewbordercolor="red"
-                          placeholder={''}
+                          placeholder={'Batch'}
                           width={normalize(130)}
                           height={normalize(50)}
                           borderWidth={1}
@@ -1119,26 +1160,33 @@ const ProductManually = props => {
                           }}>
                           Expiry date
                         </Text>
-                        <TouchableOpacity
-                          onPress={() => setCalenderVisible(!CalenderVisible)}>
-                          <TextInputItem
-                            viewbordercolor="red"
-                            placeholder={'Expiry date'}
-                            width={normalize(130)}
-                            height={normalize(50)}
-                            borderWidth={1}
-                            borderRadius={10}
-                            marginTop={normalize(5)}
-                            value={variant.expiryDate}
-                            // onChangeText={val => setaddress(val)}
-                            textColor={Colors.placeholder}
-                            placeholderTextColor={Colors.placeholder}
-                            isRightIconVisible={false}
-                            fontSize={13}
-                            fontFamily="Poppins-Medium"
-                            editable={false}
-                          />
-                        </TouchableOpacity>
+
+                        <TextInputItem
+                          viewbordercolor="red"
+                          placeholder={'MM/DD/YYYY'}
+                          width={normalize(130)}
+                          height={normalize(50)}
+                          borderWidth={1}
+                          borderRadius={10}
+                          marginTop={normalize(5)}
+                          value={variant.expiryDate}
+                          // onChangeText={val => setaddress(val)}
+                          onChangeText={text =>
+                            handleChange(text, index, 'expiryDate')
+                          }
+                          textColor={Colors.placeholder}
+                          placeholderTextColor={Colors.placeholder}
+                          // isRightIconVisible={false}
+                          fontSize={13}
+                          fontFamily="Poppins-Medium"
+                          isRightIconVisible={true}
+                          // fontSize={13}
+                          // fontFamily="Poppins-Medium"
+                          rightimage={Icons.calender}
+                          onrightimpress={() =>
+                            setCalenderVisible(!CalenderVisible)
+                          }
+                        />
                       </View>
                     </View>
                     <View
@@ -1156,35 +1204,41 @@ const ProductManually = props => {
                           }}>
                           Expiry date alert
                         </Text>
-                        <TouchableOpacity
-                          onPress={() =>
+
+                        <TextInputItem
+                          viewbordercolor="red"
+                          placeholder={'MM/DD/YYYY'}
+                          width={normalize(130)}
+                          height={normalize(50)}
+                          borderWidth={1}
+                          borderRadius={10}
+                          marginTop={normalize(5)}
+                          value={variant.expiryDateAlert}
+                          // onChangeText={val => setExpirydateAlert(val)}
+                          textColor={Colors.placeholder}
+                          placeholderTextColor={Colors.placeholder}
+                          isRightIconVisible={true}
+                          fontSize={13}
+                          fontFamily="Poppins-Medium"
+                          onChangeText={text =>
+                            handleChange(text, index, 'expiryDateAlert')
+                          }
+                          // editable={false}
+                          // isRightIconVisible={true}
+                          // fontSize={13}
+                          // fontFamily="Poppins-Medium"
+                          rightimage={Icons.calender}
+                          onrightimpress={() =>
                             setCalenderVisible1(!CalenderVisible1)
-                          }>
-                          <TextInputItem
-                            viewbordercolor="red"
-                            placeholder={'expiry date alert'}
-                            width={normalize(130)}
-                            height={normalize(50)}
-                            borderWidth={1}
-                            borderRadius={10}
-                            marginTop={normalize(5)}
-                            value={variant.expiryDateAlert}
-                            // onChangeText={val => setExpirydateAlert(val)}
-                            textColor={Colors.placeholder}
-                            placeholderTextColor={Colors.placeholder}
-                            isRightIconVisible={false}
-                            fontSize={13}
-                            fontFamily="Poppins-Medium"
-                            editable={false}
-                          />
-                        </TouchableOpacity>
+                          }
+                        />
                       </View>
 
                       <View style={[styles.inputSection]}>
                         <Text
                           style={{
                             fontSize: normalize(12),
-                            color: Colors.black,
+                            color:'#000000',
                             bottom: 15,
                           }}>
                           Inclusive gst
@@ -1417,14 +1471,12 @@ const ProductManually = props => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, {backgroundColor: Colors.black2}]}
-              onPress={() => console.log('Cancel Pressed')}>
+              onPress={() => resetVariantFields()}>
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, {backgroundColor: Colors.green}]}
-              onPress={() =>validateField()}
-              
-              >
+              onPress={() => validateField()}>
               <Text style={styles.buttonText}>Save</Text>
             </TouchableOpacity>
           </View>
@@ -1604,6 +1656,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: 'bold',
+    color:'#000000'
   },
   textInput: {
     borderWidth: 1,
@@ -1640,6 +1693,12 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     flex: 1,
+    color:Colors.placeholder
+  },
+  dropdownButtonText1: {
+    flex: 1,
+    color:Colors.placeholder
+    // color:'#000000'
   },
   downArrow: {
     width: 20,
@@ -1688,6 +1747,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     textAlign: 'center',
+    color:'#000000'
   },
   container_section: {
     borderWidth: 1,
@@ -1704,6 +1764,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontWeight: 'bold',
+    color:'#000000'
   },
   accordionContent: {
     padding: 10,
@@ -1736,7 +1797,9 @@ const styles = StyleSheet.create({
   },
   textInputs: {
     flex: 1, // Take up remaining space
-    marginLeft: 10, // Add spacing between icon and TextInput
+    marginLeft: 10,
+    color:Colors.placeholder
+    // Add spacing between icon and TextInput
   },
   checkbox: {
     width: 20,

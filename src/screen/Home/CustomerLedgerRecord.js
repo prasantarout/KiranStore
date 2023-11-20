@@ -29,7 +29,7 @@ const CustomerLedgerRecord = () => {
         <View style={styles.container}>
           <View style={styles.inputGroup}>
             <View style={styles.labelContainer}>
-              <Text>Start Date</Text>
+              <Text >Start Date</Text>
             </View>
             <TouchableOpacity
               style={styles.inputContainer}

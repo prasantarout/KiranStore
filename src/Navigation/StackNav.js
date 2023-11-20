@@ -58,6 +58,7 @@ import Purchase from '../screen/Home/Purchase';
 import Barcode from '../screen/Home/Barcode';
 import Barcode1 from '../screen/Home/Barcode1';
 import Barcode3 from '../screen/Home/Barcode3';
+import AddPRoductToMyShop1 from '../screen/Home/AddPRoductToMyShop1';
 // import Pickup from '../components/Pickup';
 const StackNav = () => {
   const Stack = createStackNavigator();
@@ -122,7 +123,11 @@ const StackNav = () => {
     MyOrders:MyOrders,
     MyStock:MyStock,
     MySuppliers:MySuppliers,
+    Barcode:Barcode,
+    Barcode1:Barcode1,
+    Barcode3:Barcode3,
     AddPRoductToMyShop:AddPRoductToMyShop,
+    AddPRoductToMyShop1:AddPRoductToMyShop1,
     NewBill:NewBill,
     MarketingTool:MarketingTool,
     ProductDiscount:ProductDiscount,
@@ -145,9 +150,9 @@ const StackNav = () => {
     TabStack1:TabStack1,
     BluetoothPrinter:BluetoothPrinter,
     Purchase:Purchase,
-    Barcode:Barcode,
-    Barcode1:Barcode1,
-    Barcode3:Barcode3
+    // Barcode:Barcode,
+    // Barcode1:Barcode1,
+    // Barcode3:Barcode3
     // Pickup:Pickup
   };
 

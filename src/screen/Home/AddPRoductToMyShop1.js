@@ -31,14 +31,13 @@ import Loader from '../../utils/helpers/Loader';
 import {clearProductStatus} from '../../redux/reducer/ProductReducer';
 // import BarcodeScanner from 'react-native-scan-barcode';
 import {useFocusEffect} from '@react-navigation/native';
-const AddPRoductToMyShop = props => {
+const AddPRoductToMyShop1 = props => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [isTorchOn, setIsTorchOn] = useState(false);
   const [barcode, setBarcode] = useState('');
   const [showProduct, setShowProduct] = useState(false);
   const barcodeItem = props?.route?.params ? props?.route?.params : '';
-  const productDetail= props?.route?.params ? props?.route?.params : '';
-  // console.log(productDetail?.productDetail, 'cxz>>>>>>>>>>>>czxcm');
+  // console.log(item, 'cxz>>>>>>>>>>>>czxcm');
 
   const bottomSheetRef = useRef(null);
   const dispatch = useDispatch();
@@ -49,7 +48,10 @@ const AddPRoductToMyShop = props => {
   };
 
   const ProductReducer = useSelector(state => state.ProductReducer);
-
+  console.log(
+    ProductReducer.getProductByBarcodeRes[0]?.length,
+    'barocxmcxcres',
+  );
 
   const handleSearch = async () => {
     if (barcode === '') {
@@ -79,26 +81,46 @@ const AddPRoductToMyShop = props => {
   // }, [barcode]);
 
   useEffect(() => {
-  if(productDetail?.productDetail?.response?.length > 0){
-  setShowProduct(true);
-}
-  }, [productDetail]);
+    let status = '';
+    if (status == '' || ProductReducer.status != status) {
+      switch (ProductReducer.status) {
+        case 'Product/getProductByBarcodeRequest':
+          status = ProductReducer.status;
+
+          break;
+        case 'Product/getProductByBarcodeSuccess':
+          status = ProductReducer.status;
+          setShowProduct(true);
+          // dispatch(clearProductStatus(ProductReducer.status))
+          // props.navigation.navigate('OtpScreen',{item:AuthReducer.signupResponse?.token})
+          // dispatch(productGetFromWishListRequest({ user_id }));
+          break;
+        case 'Product/getProductByBarcodeFailure':
+          status = ProductReducer.status;
+          setShowProduct(true);
+          break;
+      }
+    }
+  }, [ProductReducer]);
+
 
 
   const ProductBox = () => {
     return (
       <>
-        {productDetail?.productDetail?.response?.length > 0 &&
-          productDetail?.productDetail.response?.map((item, productIndex) =>{
+        {/* {ProductReducer.getProductByBarcodeRes[0]?.message==="Products Found" ? ( */}
+        {ProductReducer.getProductByBarcodeRes[0]?.length > 0 &&
+          ProductReducer.getProductByBarcodeRes?.map((product, productIndex) =>
+            product?.map((item, index) => {
               const lastIndex = item?.image?.lastIndexOf('/');
               const urlPath = item?.image?.substring(0, lastIndex + 1); // URL path
               const fileName = item?.image?.substring(lastIndex + 1);
-              // console.log(
-              //   urlPath + fileName,
-              //   '>>>>>>>>>>>>>>>>>>>>>>>>>>>>image',
-              // );
+              console.log(
+                urlPath + fileName,
+                '>>>>>>>>>>>>>>>>>>>>>>>>>>>>image',
+              );
               return (
-                <View style={styles.container} key={productIndex}>
+                <View style={styles.container}>
                   <Text
                     style={{
                       fontSize: 15,
@@ -107,7 +129,7 @@ const AddPRoductToMyShop = props => {
                       width: '80%',
                     }}>
                     {item?.message === 'No Products Found'
-                      ? 'product not found, are you want to add this product manually ?'
+                      ? 'product not found,are you want to add this product manually ?'
                       : 'This is the product you were searching for?'}
                   </Text>
                   <View style={{bottom: 20}}>
@@ -124,7 +146,7 @@ const AddPRoductToMyShop = props => {
                   </View>
                   <Text style={{color: 'black'}}>
                     {item?.message === 'No Products Found'
-                      ? barcodeItem?.barcode
+                      ? barcodeItem?.item
                       : item?.product_name}
                   </Text>
                   <Text style={styles.productPrice}>
@@ -134,7 +156,7 @@ const AddPRoductToMyShop = props => {
                       ? ''
                       : `Price Rs ${item?.mrp}`}
                   </Text>
-  
+
                   <View style={styles.buttonContainer1}>
                     <TouchableOpacity
                       style={styles.noButton}
@@ -148,21 +170,23 @@ const AddPRoductToMyShop = props => {
                       style={styles.yesButton}
                       onPress={() => {
                         props?.navigation?.navigate('ProductManually', {
-                          item: barcodeItem?.barcode ? barcodeItem?.barcode : barcode,
-                          product:item ?item:''
+                          item: barcodeItem?.item ? barcodeItem?.item : barcode,
+                          product: ProductReducer?.getProductByBarcodeRes[0]
+                            ? ProductReducer?.getProductByBarcodeRes[0]
+                            : '',
                         });
+                        // dispatch(clearBarcodeDetailsRequest([]));
                       }}>
                       <Text style={styles.buttonText}>Yes</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               );
-            }
+            }),
           )}
       </>
     );
   };
-  
 
   const [scannerOpen, setScannerOpen] = useState(false);
   const handleScanIconClick = () => {
@@ -254,7 +278,7 @@ const AddPRoductToMyShop = props => {
   );
 };
 
-export default AddPRoductToMyShop;
+export default AddPRoductToMyShop1;
 
 const styles = StyleSheet.create({
   inputContainer: {

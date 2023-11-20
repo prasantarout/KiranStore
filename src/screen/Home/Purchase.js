@@ -548,9 +548,6 @@ if (status1 === '' || ProductReducer.status !== status1) {
         });
     }
   };
-
-
-
   return (
     <SafeView>
       <CommonLinearGradient
@@ -696,7 +693,7 @@ if (status1 === '' || ProductReducer.status !== status1) {
                           </Text>
                           <View style={{flexDirection: 'row'}}>
                             <TouchableOpacity>
-                              <Text>Rs {variant.mrp ? variant.mrp:'0'}</Text>
+                              <Text style={{color:'#000000'}}>Rs {variant.mrp ? variant.mrp:'0'}</Text>
                             </TouchableOpacity>
                             {/* {numVariants > 1 &&  */}
                             {variantIndex?.length > 0 && (
@@ -983,7 +980,7 @@ if (status1 === '' || ProductReducer.status !== status1) {
                               <Text
                                 style={{
                                   fontSize: normalize(12),
-                                  color: Colors.black,
+                                  color:'#000000',
                                   bottom: 15,
                                 }}>
                                 Inclusive gst
@@ -1261,6 +1258,7 @@ if (status1 === '' || ProductReducer.status !== status1) {
                 style={styles.input1}
                 placeholder="Rs 0"
                 textAlign="left"
+                placeholderTextColor={'#000000'}
               />
             </View>
           </View>
@@ -1814,6 +1812,7 @@ const styles = StyleSheet.create({
   },
   placeholderStyle: {
     fontSize: 16,
+    color:Colors.placeholder
   },
   selectedTextStyle: {
     fontSize: 16,
@@ -1940,6 +1939,7 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     flex: 1,
+    color:Colors.placeholder
   },
   downArrow: {
     width: 20,
@@ -1988,6 +1988,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     textAlign: 'center',
+    color:'#000000'
   },
   container_section: {
     borderWidth: 1,

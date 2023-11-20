@@ -126,7 +126,7 @@ export default function CommonLinearGradient({
 
 const styles = StyleSheet.create({
   container: {
-    height: horizontalScale(100),
+    height: horizontalScale(90),
     width: '100%',
   },
   viewStyle: {

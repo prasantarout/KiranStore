@@ -8,7 +8,7 @@ const initialState = {
   prodctDetailsRes: {},
   vendorRes: {},
   getVendorRes: {},
-  getProductByBarcodeRes: {},
+  getProductByBarcodeRes:[],
   getProductDetailsRes: [],
   purchaseOrderRes: {},
   createpurchaseOrderRes: {},
@@ -107,8 +107,13 @@ const ProductSlice = createSlice({
     },
     getProductByBarcodeSuccess(state, action) {
       // console.log(action.payload,"Ffffffffff")
-      state.getProductByBarcodeRes = action.payload;
-      state.status = action.type;
+      const updatedBarcodeDetails = [...state.getProductByBarcodeRes, action.payload];
+      // console.log(updatedProductDetails,"csfkjsfsfxCn");
+      return {
+        ...state,
+        getProductByBarcodeRes: updatedBarcodeDetails,
+        status: action.type,
+      };
     },
     getProductByBarcodeFailure(state, action) {
       state.error = action.error;

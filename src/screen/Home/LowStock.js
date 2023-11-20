@@ -18,7 +18,7 @@ const LowStock = (props) => {
         >
           <View style={styles.container}>
             <View style={styles.inputContainer}>
-              <TextInput style={styles.textInput} placeholder="Search" />
+              <TextInput style={styles.textInput} placeholder="Search" placeholderTextColor={'#000000'}/>
               <TouchableOpacity
                 style={styles.qrIcon}
                 onPress={() => {
